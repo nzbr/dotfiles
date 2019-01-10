@@ -98,6 +98,15 @@ autocmd BufWritePre * %s/\s\+$//e
 	autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 
 
+"  ____                                          _
+" / ___|___  _ __ ___  _ __ ___   __ _ _ __   __| |___
+"| |   / _ \| '_ ` _ \| '_ ` _ \ / _` | '_ \ / _` / __|
+"| |__| (_) | | | | | | | | | | | (_| | | | | (_| \__ \
+" \____\___/|_| |_| |_|_| |_| |_|\__,_|_| |_|\__,_|___/
+
+command! -nargs=+ Compile :term ++close ++rows=10 vimcompile.sh <args>
+command! -nargs=+ XdgOpen :term ++close ++hidden xdg-open <args>
+
 
 " _  __          _     _           _
 "| |/ /___ _   _| |__ (_)_ __   __| |___
@@ -130,3 +139,16 @@ autocmd BufWritePre * %s/\s\+$//e
 
 "NERDTree
 	map <C-e> :NERDTreeToggle<CR>
+
+
+" _
+"| |    __ _ _ __   __ _ _   _  __ _  __ _  ___  ___
+"| |   / _` | '_ \ / _` | | | |/ _` |/ _` |/ _ \/ __|
+"| |__| (_| | | | | (_| | |_| | (_| | (_| |  __/\__ \
+"|_____\__,_|_| |_|\__, |\__,_|\__,_|\__, |\___||___/
+"                  |___/             |___/
+
+"Markdown
+	command! CompilePandoc Compile pdf.sh "%"
+	autocmd FileType pandoc set nospell | set nofoldenable
+	autocmd FileType pandoc autocmd BufWritePost <buffer> CompilePandoc
