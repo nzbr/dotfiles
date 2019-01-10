@@ -23,8 +23,15 @@
 	python powerline_setup()
 	python del powerline_setup
 	set rtp+=/usr/share/powerline/bindings/vim
-	set laststatus=2
 	let g:Powerline_symbols = "fancy"
+	set laststatus=2
+	set showtabline=2 "Always show tab line
+	set noshowmode
+
+"Buffers
+	map <A-left> :bp<CR>
+	map <A-right> :bn<CR>
+	map <C-W> :if &modified <bar> echo 'File is modified' <bar> else <bar> bp<bar>sp<bar>bn<bar>bd<bar> endif <CR>
 
 "Misc
 	set nocompatible    "Disable compatible mode
@@ -35,6 +42,8 @@
 	"Newline comments
 	autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
 	set splitbelow splitright "Set default split directions
+	set hidden
+	set switchbuf=usetab,newtab
 
 "Line Numbers
 	set number
