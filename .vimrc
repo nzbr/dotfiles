@@ -108,7 +108,7 @@ autocmd BufWritePre * %s/\s\+$//e
 	"Buffers
 	map <A-left> :bp<CR>
 	map <A-right> :bn<CR>
-	map <A-w> :if &modified <bar> echo 'File is modified' <bar> else <bar> bp<bar>sp<bar>bn<bar>bd<bar> endif <CR>
+	map <C-x> :if &modified <bar> echo 'File is modified' <bar> else <bar> bp<bar>sp<bar>bn<bar>bd <bar> endif <CR>
 
 "Copy and paste
 	vnoremap <C-c> "*y :let @+=@*<CR>
