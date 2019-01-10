@@ -31,11 +31,6 @@
 	set showtabline=2 "Always show tab line
 	set noshowmode
 
-"Buffers
-	map <A-left> :bp<CR>
-	map <A-right> :bn<CR>
-	map <C-W> :if &modified <bar> echo 'File is modified' <bar> else <bar> bp<bar>sp<bar>bn<bar>bd<bar> endif <CR>
-
 "Misc
 	set nocompatible    "Disable compatible mode
 	filetype plugin on  "Enable filetype detection
@@ -80,7 +75,6 @@
 	hi Whitespace ctermfg=DarkGray
 	match Whitespace /\s/
 
-
 "Delete trailing whitespaces when saving
 autocmd BufWritePre * %s/\s\+$//e
 
@@ -110,6 +104,11 @@ autocmd BufWritePre * %s/\s\+$//e
 	map <C-Down>  <C-w>j
 	map <C-Up>    <C-w>k
 	map <C-Right> <C-w>l
+
+	"Buffers
+	map <A-left> :bp<CR>
+	map <A-right> :bn<CR>
+	map <A-w> :if &modified <bar> echo 'File is modified' <bar> else <bar> bp<bar>sp<bar>bn<bar>bd<bar> endif <CR>
 
 "Copy and paste
 	vnoremap <C-c> "*y :let @+=@*<CR>
