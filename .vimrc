@@ -19,6 +19,10 @@
 	Plug 'airblade/vim-gitgutter'
 	Plug 'scrooloose/nerdtree'
 	Plug 'Xuyuanp/nerdtree-git-plugin'
+	Plug 'machakann/vim-highlightedyank'
+	Plug 'vim-pandoc/vim-pandoc'
+	Plug 'vim-pandoc/vim-pandoc-syntax'
+	"Plug 'neoclide/coc.nvim', {'tag': '*', 'do': { -> coc#util#install()}}
 	call plug#end()
 
 "Powerline
