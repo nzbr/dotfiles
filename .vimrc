@@ -6,6 +6,8 @@
 
 "Reload this file
 command! Reload source $MYVIMRC
+"Delete all autocmds on reload
+autocmd!
 
 "Auto-Install Plug
 	if empty(glob('~/.vim/autoload/plug.vim'))
