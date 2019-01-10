@@ -16,6 +16,7 @@
 	Plug 'PotatoesMaster/i3-vim-syntax'
 	Plug 'jreybert/vimagit'
 	Plug 'aquach/vim-http-client'
+	Plug 'airblade/vim-gitgutter'
 	Plug 'scrooloose/nerdtree'
 	Plug 'Xuyuanp/nerdtree-git-plugin'
 	call plug#end()
