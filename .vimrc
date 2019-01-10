@@ -16,6 +16,8 @@
 	Plug 'PotatoesMaster/i3-vim-syntax'
 	Plug 'jreybert/vimagit'
 	Plug 'aquach/vim-http-client'
+	Plug 'scrooloose/nerdtree'
+	Plug 'Xuyuanp/nerdtree-git-plugin'
 	call plug#end()
 
 "Powerline
@@ -81,6 +83,16 @@
 "Delete trailing whitespaces when saving
 autocmd BufWritePre * %s/\s\+$//e
 
+"NERDTree
+	let g:NERDTreeShowIgnoredStatus = 1
+	"Autostart if vim is opened without file
+		autocmd StdinReadPre * let s:std_in=1
+		autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
+	"Auto-close vim if only NERDTree is open
+	autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+
+
+
 " _  __          _     _           _
 "| |/ /___ _   _| |__ (_)_ __   __| |___
 "| ' // _ \ | | | '_ \| | '_ \ / _` / __|
@@ -105,4 +117,5 @@ autocmd BufWritePre * %s/\s\+$//e
 "Misc
 	map <C-g> :Goyo \| set linebreak<CR>
 
-
+"NERDTree
+	map <C-e> :NERDTreeToggle<CR>
