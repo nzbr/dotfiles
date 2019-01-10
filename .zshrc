@@ -7,8 +7,8 @@
 export ZSH=/usr/share/oh-my-zsh
 
 plugins=(
-        git
-        fzf
+	git
+	fzf
 )
 
 source $ZSH/oh-my-zsh.sh
@@ -37,15 +37,17 @@ alias tree="exa --tree"
 alias clone="git clone"
 alias add="git add --all ."
 alias commit="git commit"
+alias fetch="git fetch && git status"
 alias pull="git pull"
 alias stash="git stash"
 alias pop="git stash pop"
 alias push="git push"
-alias blame="git blame"
+alias status="git status"
 alias gtree="git log --graph --oneline --all"
 
 alias drun="docker run --rm -it -v $PWD:/dir" #Easily disposable docker containers
 alias re="exec $SHELL" #Restart the current shell
+alias cdt="mktemp -d | cd"
 
 alias qemu-kvm="qemu-system-x86_64 --enable-kvm"
 
