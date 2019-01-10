@@ -32,7 +32,6 @@
 	set rtp+=/usr/share/powerline/bindings/vim
 	let g:Powerline_symbols = "fancy"
 	set laststatus=2
-	set showtabline=2 "Always show tab line
 	set noshowmode
 
 "Misc
@@ -44,8 +43,11 @@
 	"Newline comments
 	autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
 	set splitbelow splitright "Set default split directions
+
+"Buffers
 	set hidden
 	set switchbuf=usetab,newtab
+	set showtabline=2 "Always show tab line
 
 "Line Numbers
 	set number
@@ -109,7 +111,7 @@ autocmd BufWritePre * %s/\s\+$//e
 	map <C-Up>    <C-w>k
 	map <C-Right> <C-w>l
 
-	"Buffers
+"Buffers
 	map <A-left> :bp<CR>
 	map <A-right> :bn<CR>
 	map <C-x> :if &modified <bar> echo 'File is modified' <bar> else <bar> bp<bar>sp<bar>bn<bar>bd <bar> endif <CR>
