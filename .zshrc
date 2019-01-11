@@ -45,7 +45,6 @@ alias push="git push"
 alias status="git status"
 alias gtree="git log --graph --oneline --all"
 
-alias drun="docker run --rm -it -v $PWD:/dir" #Easily disposable docker containers
 alias re="exec $SHELL" #Restart the current shell
 alias cdt="mktemp -d | cd"
 
