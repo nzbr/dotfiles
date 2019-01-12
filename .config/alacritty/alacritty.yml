@@ -23,6 +23,9 @@ window:
         x: 0
         y: 0
 
+    # Spread padding evenly (of non-complete cells)
+    dynamic_padding: true
+
     # Window decorations
     # One of 'full' or 'none'
     decorations: full
@@ -58,7 +61,7 @@ font:
         style: Italic
 
     # Font size (pt)
-    size: 8.0
+    size: 9.0
 
     # Offset around characters
     # x = letter spacing
@@ -110,6 +113,14 @@ mouse:
     # Multi-click time
     double_click: { threshold: 300 }
     triple_click: { threshold: 300 }
+
+    # Make mouse invisible while typing
+    hide_when_typing: true
+
+    # Makes links clickable while holding Shift
+    url:
+        launcher: xdg-open
+        modifiers: Shift
 
 
 selection:
