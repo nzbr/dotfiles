@@ -25,7 +25,7 @@ window:
 
     # Window decorations
     # One of 'full' or 'none'
-    decorations: none
+    decorations: full
 
 scrolling:
     # Size of scrollback buffer (lines)

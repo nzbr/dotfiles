@@ -32,5 +32,9 @@ wal -R
 echo "Starting killksplash.sh"
 timeout 300s /home/nzbr/scripts/killksplash.sh &
 
+echo "Pre-Processing i3 config"
+i3bang $HOME/.i3/_config
+$HOME/scripts/i3-setmonitors.sh $HOME/.i3/config
+
 echo "Starting KDE"
 exec startkde "$@"
