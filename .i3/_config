@@ -90,6 +90,7 @@ for_window [class="[Ll]azarus" title="^(?!Lazarus IDE).*"] floating enable
 
 # Automatically make PDF reader tabbed to what it was started from
 for_window [class="Evince"] layout tabbed
+for_window [class="Zathura"] layout tabbed
 
 
 ##KEYBINDINGS
@@ -101,7 +102,7 @@ for_window [class="Evince"] layout tabbed
 #           |___/                               |___/
 
 # i3
-bindsym $mod+Shift+!!<c,r> exec --no-startup-id i3bang; exec --no-startup-id i3-setmonitors.sh; !!<reload,restart>
+bindsym $mod+Shift+!!<c,r> exec --no-startup-id i3bang; exec --no-startup-id sh i3-setmonitors.sh; !!<reload,restart>
 bindsym $mod+Shift+q kill
 bindsym $mod+Control+k --release exec --no-startup-id xkill
 
