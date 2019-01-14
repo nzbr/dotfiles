@@ -10,15 +10,18 @@ powerline-setup
 
 # export shell variables
 set -x EDITOR vim
-set -x PATH $PATH ~/scripts
+set -x PATH $PATH ~/scripts ~/.local/bin
 set -x MAKEFLAGS -j(nproc) #Make make use all cores, makes AUR faster
+
+# Shortcuts
+alias v "vim"
+alias r "ranger"
 
 # use exa instead of ls
 alias ls "exa"
 alias la "exa -la"
 alias l "exa -l"
 
-# aliases
 # alias re "exec $SHELL" # Restart the current shell
 alias temp "cd (mktemp -d)"
 alias qemu-kvm="qemu-system-x86_64 --enable-kvm"
@@ -28,7 +31,7 @@ alias clone    "git clone"
 alias add      "git add"
 alias addall   "git add --all"
 alias commit   "git commit"
-alias fetch    "git fetch"
+alias fetch    "git fetch; and git status"
 alias pull     "git pull"
 alias push     "git push"
 alias stash    "git stash"
