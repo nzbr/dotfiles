@@ -154,6 +154,9 @@ live_config_reload: true
 #           |___/                               |___/
 
 key_bindings:
+  - { key: Period,    mods: Control,         action: ResetFontSize       }
+  - { key: Add,       mods: Control,         action: IncreaseFontSize    }
+  - { key: Subtract,      mods: Control,     action: DecreaseFontSize    }
   - { key: V,        mods: Control|Shift,    action: Paste               }
   - { key: C,        mods: Control|Shift,    action: Copy                }
   - { key: Paste,                   action: Paste                        }
