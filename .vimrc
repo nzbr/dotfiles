@@ -9,6 +9,11 @@ command! Reload source $MYVIMRC
 "Delete all autocmds on reload
 autocmd!
 
+"VIM needs a posix compliant shell
+if &shell == '/usr/bin/fish'
+	set shell=/bin/bash
+endif
+
 "Auto-Install Plug
 	if empty(glob('~/.vim/autoload/plug.vim'))
 	silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
@@ -27,6 +32,10 @@ autocmd!
 	Plug 'machakann/vim-highlightedyank'
 	Plug 'vim-pandoc/vim-pandoc'
 	Plug 'vim-pandoc/vim-pandoc-syntax'
+	Plug 'dag/vim-fish'
+	Plug 'jamessan/vim-gnupg'
+	Plug 'tpope/vim-eunuch'
+	Plug 'dhruvasagar/vim-table-mode'
 	"Plug 'neoclide/coc.nvim', {'tag': '*', 'do': { -> coc#util#install()}}
 	call plug#end()
 
@@ -48,6 +57,7 @@ autocmd!
 	"Newline comments
 	autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
 	set splitbelow splitright "Set default split directions
+	filetype plugin indent on
 
 "Buffers
 	set hidden
@@ -87,7 +97,7 @@ autocmd!
 	match Whitespace /\s/
 
 "Delete trailing whitespaces when saving
-autocmd BufWritePre * %s/\s\+$//e
+	autocmd BufWritePre * %s/\s\+$//e
 
 "NERDTree
 	let g:NERDTreeShowIgnoredStatus = 1
@@ -96,6 +106,11 @@ autocmd BufWritePre * %s/\s\+$//e
 		autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
 	"Auto-close vim if only NERDTree is open
 	autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+
+"fish
+	autocmd FileType fish compiler fish
+	autocmd FileType fish setlocal textwidth=79
+	autocmd FileType fish setlocal foldmethod=expr
 
 
 "  ____                                          _
