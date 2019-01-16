@@ -36,6 +36,7 @@ endif
 	Plug 'jamessan/vim-gnupg'
 	Plug 'tpope/vim-eunuch'
 	Plug 'dhruvasagar/vim-table-mode'
+	Plug 'tpope/vim-fugitive'
 	"Plug 'neoclide/coc.nvim', {'tag': '*', 'do': { -> coc#util#install()}}
 	call plug#end()
 
@@ -97,7 +98,7 @@ endif
 	match Whitespace /\s/
 
 "Delete trailing whitespaces when saving
-	autocmd BufWritePre * %s/\s\+$//e
+	autocmd BufWritePre * if &ft!="pandoc"|%s/\s\+$//e
 
 "NERDTree
 	let g:NERDTreeShowIgnoredStatus = 1
@@ -154,7 +155,6 @@ command! -nargs=+ XdgOpen :term ++close ++hidden xdg-open <args>
 
 "NERDTree
 	map <C-e> :NERDTreeToggle<CR>
-
 
 " _
 "| |    __ _ _ __   __ _ _   _  __ _  __ _  ___  ___
