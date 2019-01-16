@@ -38,6 +38,10 @@ alias stash    "git stash"
 alias pop      "git stash pop"
 alias gtree    "git log --graph --oneline --all"
 
+if test -f ~/.secrets
+	source ~/.secrets
+end
+
 if [ "$STARTED" != "true" ]; and tty # Run neofetch when opening a terminal (or loggin in)
 	neofetch
 	set -x STARTED true
