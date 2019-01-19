@@ -174,7 +174,7 @@ set $terminal alacritty
 set $filemanager dolphin
 
 # Open a terminal
-bindsym $mod+Return exec $terminal
+bindsym $mod+Return --release exec $terminal
 
 # Browser
 bindsym $mod!!<,+Shift,+Control+Shift>+x exec !!<qutebrowser,firefox-developer-edition,tor-browser>
