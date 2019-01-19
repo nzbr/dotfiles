@@ -48,3 +48,7 @@ if [ "$STARTED" != "true" ]; and tty # Run neofetch when opening a terminal (or 
 	set -x STARTED true
 end
 
+if test -f ~/.secrets
+	source ~/.secrets
+end
+
