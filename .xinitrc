@@ -4,9 +4,12 @@ echo "Args: $@"
 echo "Env:"
 env
 
-#KSplash
-echo "Starting KSplash"
-timeout 60s ksplashqml --window --nofork arch.wallpaper &
+# Wallpaper
+feh --bg-fill ~/Bilder/wallpaper
+
+# KSplash
+#echo "Starting KSplash"
+#timeout 60s ksplashqml --window --nofork arch.wallpaper &
 
 # Merge colors and settings
 echo "Loading .Xrescources"
@@ -25,12 +28,12 @@ echo "Starting compton"
 compton -b --config ~/.config/compton.conf
 
 echo "Setting theme"
-wal -R
+#wal -R
 #echo "Setting theme - alacritty"
 #$HOME/scripts/alacritty-wal.py
 
-echo "Starting killksplash.sh"
-timeout 300s /home/nzbr/scripts/killksplash.sh &
+# echo "Starting killksplash.sh"
+# timeout 300s /home/nzbr/scripts/killksplash.sh &
 
 echo "Pre-Processing i3 config"
 i3bang $HOME/.i3/_config
