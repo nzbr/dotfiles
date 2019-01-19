@@ -14,29 +14,30 @@ set -x PATH $PATH ~/scripts ~/.local/bin
 set -x MAKEFLAGS -j(nproc) #Make make use all cores, makes AUR faster
 
 # Shortcuts
-alias v "vim"
-alias r "ranger"
+abbr v 'vim'
+abbr r 'ranger'
 
 # use exa instead of ls
-alias ls "exa"
-alias la "exa -la"
-alias l "exa -l"
+abbr ls 'exa'
+abbr la 'exa -la'
+abbr l 'exa -l'
 
-# alias re "exec $SHELL" # Restart the current shell
-alias temp "cd (mktemp -d)"
-alias qemu-kvm="qemu-system-x86_64 --enable-kvm"
+# abbr re 'exec $SHELL' # Restart the current shell
+abbr temp 'cd (mktemp -d)'
+abbr qemu-kvm 'qemu-system-x86_64 --enable-kvm'
 
-# git aliases
-alias clone    "git clone"
-alias add      "git add"
-alias addall   "git add --all"
-alias commit   "git commit"
-alias fetch    "git fetch; and git status"
-alias pull     "git pull"
-alias push     "git push"
-alias stash    "git stash"
-alias pop      "git stash pop"
-alias gtree    "git log --graph --oneline --all"
+# git abbres
+abbr clone    'git clone'
+abbr add      'git add'
+abbr addall   'git add --all'
+abbr commit   'git commit'
+abbr fetch    'git fetch; and git status'
+abbr pull     'git pull'
+abbr push     'git push'
+abbr stash    'git stash'
+abbr pop      'git stash pop'
+abbr gdiff    'git diff'
+abbr gtree    'git log --graph --oneline --all'
 
 if test -f ~/.secrets
 	source ~/.secrets
