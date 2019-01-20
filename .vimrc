@@ -122,6 +122,7 @@ endif
 
 command! -nargs=+ Compile :term ++close ++rows=10 vimcompile.sh <args>
 command! -nargs=+ XdgOpen :term ++close ++hidden xdg-open <args>
+command! -nargs=0 PdfOpen :XdgOpen %:r.pdf
 
 
 " _  __          _     _           _
