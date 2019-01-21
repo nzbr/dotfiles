@@ -9,7 +9,7 @@ command! Reload source $MYVIMRC
 "Delete all autocmds on reload
 autocmd!
 
-"VIM needs a posix compliant shell
+"VIM needs a POSIX compliant shell
 if &shell == '/usr/bin/fish'
 	set shell=/bin/bash
 endif
@@ -38,6 +38,7 @@ endif
 	Plug 'dhruvasagar/vim-table-mode'
 	Plug 'tpope/vim-fugitive'
 	Plug 'godlygeek/tabular'
+	Plug 'Raimondi/delimitMate'
 	"Plug 'neoclide/coc.nvim', {'tag': '*', 'do': { -> coc#util#install()}}
 	call plug#end()
 
@@ -55,11 +56,16 @@ endif
 	filetype plugin on  "Enable filetype detection
 	syntax on           "Always enable syntax highlighting
 	set encoding=utf-8  "Always use UTF-8
-	set wildmode=longest,list,full "VIM Autocompletion
+	set wildmode=longest,list,full "VIM auto completion
 	"Newline comments
 	autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
 	set splitbelow splitright "Set default split directions
 	filetype plugin indent on
+
+"Spell-Check
+set spell
+set spellfile=~/Dokumente/vim-spell.utf-8.add
+set spelllang=de_de,en_us
 
 "Buffers
 	set hidden
@@ -85,7 +91,7 @@ endif
 	set softtabstop=0
 	set shiftwidth=4
 
-"Show invisibles
+"Show invisible characters
 	set listchars=""
 	"set listchars+=space:·
 	"set listchars+=eol:¬
@@ -135,7 +141,7 @@ command! -nargs=0 RC      :edit $MYVIMRC
 "|_|\_\___|\__, |_.__/|_|_| |_|\__,_|___/
 "          |___/
 
-"Split view contols
+"Split view controls
 	map <C-h> <C-w>h
 	map <C-j> <C-w>j
 	map <C-k> <C-w>k
@@ -169,5 +175,5 @@ command! -nargs=0 RC      :edit $MYVIMRC
 
 "Markdown
 	command! CompilePandoc Compile pdf.sh "%"
-	autocmd FileType pandoc set nospell | set nofoldenable
+	autocmd FileType pandoc set nofoldenable
 	autocmd FileType pandoc autocmd BufWritePost <buffer> CompilePandoc
