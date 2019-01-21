@@ -9,6 +9,8 @@
 !.config/compton.conf
 !.config/alacritty
 !.config/alacritty/alacritty.yml
+!.config/zathura
+!.config/zathura/zathurarc
 !scripts
 !scripts/mdopen.sh
 !scripts/vimcompile.sh
