@@ -1,0 +1,6 @@
+map <Left> navigate previous
+map <Right> navigate next
+map <S-Left> scroll left
+map <S-Right> scroll right
+map <S-Up> scroll up
+map <S-Down> scroll down
