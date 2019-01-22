@@ -22,24 +22,23 @@ endif
 
 "Plugins
 	call plug#begin('~/.vim/bundle')
-	Plug 'junegunn/goyo.vim'
-	Plug 'PotatoesMaster/i3-vim-syntax'
-	Plug 'jreybert/vimagit'
-	Plug 'aquach/vim-http-client'
-	Plug 'airblade/vim-gitgutter'
-	Plug 'scrooloose/nerdtree'
-	Plug 'Xuyuanp/nerdtree-git-plugin'
-	Plug 'machakann/vim-highlightedyank'
-	Plug 'vim-pandoc/vim-pandoc'
-	Plug 'vim-pandoc/vim-pandoc-syntax'
-	Plug 'dag/vim-fish'
-	Plug 'jamessan/vim-gnupg'
-	Plug 'tpope/vim-eunuch'
-	Plug 'dhruvasagar/vim-table-mode'
-	Plug 'tpope/vim-fugitive'
-	Plug 'godlygeek/tabular'
-	Plug 'Raimondi/delimitMate'
-	"Plug 'neoclide/coc.nvim', {'tag': '*', 'do': { -> coc#util#install()}}
+		Plug 'airblade/vim-gitgutter'
+		Plug 'aquach/vim-http-client'
+		Plug 'dag/vim-fish'
+		Plug 'dhruvasagar/vim-table-mode'
+		Plug 'godlygeek/tabular'
+		Plug 'jamessan/vim-gnupg'
+		Plug 'jreybert/vimagit'
+		Plug 'junegunn/goyo.vim'
+		Plug 'machakann/vim-highlightedyank'
+		Plug 'neoclide/coc.nvim', {'tag': '*', 'do': { -> coc#util#install()}}
+		Plug 'PotatoesMaster/i3-vim-syntax'
+		Plug 'Raimondi/delimitMate'
+		Plug 'scrooloose/nerdtree'
+		Plug 'tpope/vim-eunuch'
+		Plug 'tpope/vim-fugitive'
+		Plug 'vim-pandoc/vim-pandoc'
+		Plug 'vim-pandoc/vim-pandoc-syntax'
 	call plug#end()
 
 "Powerline
