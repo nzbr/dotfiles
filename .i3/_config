@@ -139,7 +139,7 @@ bindsym $mod+f fullscreen toggle
 bindsym $mod+!!<w,e> layout !!<tabbed,toggle split>
 
 # Floating
-bindsym $mod+Shift+space floating enable
+bindsym $mod+Shift+space floating toggle
 bindsym $mod+space focus mode_toggle
 
 # Scratchpad
