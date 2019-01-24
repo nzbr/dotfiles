@@ -18,7 +18,9 @@
 set $mod Mod4
 
 # Disable titlebars
-for_window [class="^.*"] border pixel 3
+# for_window [class="^.*"] border pixel 3
+default_border pixel 3
+default_floating_border normal
 
 # i3-gaps specific
 gaps inner 10
@@ -85,7 +87,7 @@ for_window [class="ksplashqml"] floating enable, border none, move position cent
 for_window [class="Pamac-manager"] floating enable
 
 # The Anchor Docking Design package is needed to make this work
-for_window [class="[Ll]azarus" title="^(?!Lazarus IDE).*"] floating enable
+for_window [class="[Ll]azarus" title="^(?!Lazarus-IDE).*"] floating enable
 
 # Automatically make PDF reader tabbed to what it was started from
 for_window [class="Evince"] layout tabbed
