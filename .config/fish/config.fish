@@ -26,18 +26,32 @@ abbr l 'exa -l'
 abbr temp 'cd (mktemp -d)'
 abbr qemu-kvm 'qemu-system-x86_64 --enable-kvm'
 
-# git abbres
-abbr clone    'git clone'
-abbr add      'git add'
-abbr addall   'git add --all'
-abbr commit   'git commit'
-abbr fetch    'git fetch; and git status'
-abbr pull     'git pull'
-abbr push     'git push'
-abbr stash    'git stash'
-abbr pop      'git stash pop'
-abbr gdiff    'git diff'
-abbr gtree    'git log --graph --oneline --all'
+# git abbrs
+abbr gcl    'git clone'
+abbr ga     'git add'
+abbr gaa    'git add --all'
+abbr gc     'git commit'
+abbr gf     'git fetch; and git status'
+abbr gpl    'git pull'
+abbr gps    'git push'
+abbr gst    'git stash'
+abbr gsp    'git stash pop'
+abbr gch    'git checkout'
+abbr gd     'git diff'
+abbr gt     'git log --graph --oneline --all'
+
+abbr hgcl    'git --git-dir=$HOME/.git-hidden --work-tree=$HOME clone'
+abbr hga     'git --git-dir=$HOME/.git-hidden --work-tree=$HOME add'
+abbr hgaa    'git --git-dir=$HOME/.git-hidden --work-tree=$HOME add --all'
+abbr hgc     'git --git-dir=$HOME/.git-hidden --work-tree=$HOME commit'
+abbr hgf     'git --git-dir=$HOME/.git-hidden --work-tree=$HOME fetch; and git status'
+abbr hgpl    'git --git-dir=$HOME/.git-hidden --work-tree=$HOME pull'
+abbr hgps    'git --git-dir=$HOME/.git-hidden --work-tree=$HOME push'
+abbr hgst    'git --git-dir=$HOME/.git-hidden --work-tree=$HOME stash'
+abbr hgsp    'git --git-dir=$HOME/.git-hidden --work-tree=$HOME stash pop'
+abbr hgch    'git --git-dir=$HOME/.git-hidden --work-tree=$HOME checkout'
+abbr hgd     'git --git-dir=$HOME/.git-hidden --work-tree=$HOME diff'
+abbr hgt     'git --git-dir=$HOME/.git-hidden --work-tree=$HOME log --graph --oneline --all'
 
 if test -f ~/.secrets
 	source ~/.secrets
@@ -46,9 +60,5 @@ end
 if [ "$STARTED" != "true" ]; and tty # Run neofetch when opening a terminal (or loggin in)
 	neofetch
 	set -x STARTED true
-end
-
-if test -f ~/.secrets
-	source ~/.secrets
 end
 
