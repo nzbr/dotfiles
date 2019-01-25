@@ -4,6 +4,9 @@ echo "Args: $@"
 echo "Env:"
 env
 
+# Setup PRIME
+if [ -f ~/.prime ]; then xrandr --setprovideroffloadsink nouveau Intel; fi
+
 # Wallpaper
 feh --bg-fill ~/Bilder/wallpaper
 
