@@ -18,14 +18,18 @@ abbr v 'vim'
 abbr r 'ranger'
 abbr x 'xdg-open'
 
+abbr re 'exec $SHELL' # Restart the current shell
+abbr temp 'cd (mktemp -d)'
+
 # use exa instead of ls
 abbr ls 'exa'
 abbr la 'exa -la'
 abbr l 'exa -l'
 
-# abbr re 'exec $SHELL' # Restart the current shell
-abbr temp 'cd (mktemp -d)'
-abbr qemu-kvm 'qemu-system-x86_64 --enable-kvm'
+# QEMU
+set kvmcmd 'qemu-system-x86_64 --enable-kvm'
+abbr qemu-kvm $kvmcmd
+abbr kvm $kvmcmd
 
 # git abbrs
 abbr gcl    'git clone'
@@ -41,6 +45,7 @@ abbr gch    'git checkout'
 abbr gd     'git diff'
 abbr gt     'git log --graph --oneline --all'
 
+# git abbrs for dotfiles
 abbr hgcl    'git --git-dir=$HOME/.git-hidden --work-tree=$HOME clone'
 abbr hga     'git --git-dir=$HOME/.git-hidden --work-tree=$HOME add'
 abbr hgaa    'git --git-dir=$HOME/.git-hidden --work-tree=$HOME add --all'
@@ -54,11 +59,17 @@ abbr hgch    'git --git-dir=$HOME/.git-hidden --work-tree=$HOME checkout'
 abbr hgd     'git --git-dir=$HOME/.git-hidden --work-tree=$HOME diff'
 abbr hgt     'git --git-dir=$HOME/.git-hidden --work-tree=$HOME log --graph --oneline --all'
 
+function mcd
+	mkdir -p $argv
+	cd $argv
+end
+
 if test -f ~/.secrets
 	source ~/.secrets
 end
 
-if [ "$STARTED" != "true" ]; and [ (id -u) != "0" ]; and tty # Run neofetch when opening a terminal (or loggin in)
+if [ "$STARTED" != "true" ]; and [ (id -u) != "0" ]; and tty >/dev/null # Run neofetch when opening a terminal (or loggin in)
+	tty
 	neofetch
 	set -x STARTED true
 end
