@@ -4,10 +4,11 @@
 " \ V /| | | | | | |  _ <| |___
 "  \_/ |_|_| |_| |_|_| \_\\____|
 
-"Reload this file
-command! Reload source $MYVIMRC
 "Delete all autocmds on reload
 autocmd!
+"Reload this file
+command! Reload source $MYVIMRC
+autocmd BufWritePost $MYVIMRC Reload
 
 "VIM needs a POSIX compliant shell
 if &shell == '/usr/bin/fish'
@@ -62,7 +63,7 @@ endif
 	filetype plugin indent on
 
 "Spell-Check
-set spell
+autocmd FileType * setlocal nospell
 set spellfile=~/Dokumente/vim-spell.utf-8.add
 set spelllang=de_de,en_us
 
@@ -103,8 +104,9 @@ set spelllang=de_de,en_us
 	hi Whitespace ctermfg=DarkGray
 	match Whitespace /\s/
 
-"Delete trailing whitespaces when saving
+"Delete trailing whitespaces automatically
 	autocmd BufWritePre * if &ft!="pandoc"|%s/\s\+$//e
+	"autocmd BufReadPost * if &ft!="pandoc"|%s/\s\+$//e
 
 "NERDTree
 	let g:NERDTreeShowIgnoredStatus = 1
@@ -114,12 +116,6 @@ set spelllang=de_de,en_us
 	"Auto-close vim if only NERDTree is open
 	autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 
-"fish
-	autocmd FileType fish compiler fish
-	autocmd FileType fish setlocal textwidth=79
-	autocmd FileType fish setlocal foldmethod=expr
-
-
 "  ____                                          _
 " / ___|___  _ __ ___  _ __ ___   __ _ _ __   __| |___
 "| |   / _ \| '_ ` _ \| '_ ` _ \ / _` | '_ \ / _` / __|
@@ -127,9 +123,9 @@ set spelllang=de_de,en_us
 " \____\___/|_| |_| |_|_| |_| |_|\__,_|_| |_|\__,_|___/
 
 command! -nargs=+ Compile :term ++close ++rows=10 vimcompile.sh <args>
+command! -nargs=+ Run     :term ++rows=10 <args>
 
 command! -nargs=+ XdgOpen :term ++close ++hidden xdg-open <args>
-command! -nargs=0 PdfOpen :XdgOpen %:r.pdf
 
 command! -nargs=0 RC      :edit $MYVIMRC
 
@@ -172,7 +168,21 @@ command! -nargs=0 RC      :edit $MYVIMRC
 "|_____\__,_|_| |_|\__, |\__,_|\__,_|\__, |\___||___/
 "                  |___/             |___/
 
-"Markdown
-	command! CompilePandoc Compile pdf.sh "%"
+"Markdown + LaTeX
+	command! -nargs=0 Pandoc :Compile pdf.sh "%"
+	command! -nargs=0 PdfOpen :XdgOpen %:r.pdf
 	autocmd FileType pandoc set nofoldenable
 	autocmd FileType pandoc autocmd BufWritePost <buffer> CompilePandoc
+
+"fish
+	autocmd FileType fish compiler fish
+	autocmd FileType fish setlocal textwidth=79
+	autocmd FileType fish setlocal foldmethod=expr
+
+"Java
+	command! -nargs=0 Javac :Compile javac "%"
+	command! -nargs=0 JavaRun :Run java "%:r"
+	command! -nargs=0 Java :Run sh -c "echo '$ javac' \\'%\\' && javac '%' && echo '$ java' \\'%:r\\' && java '%:r'"
+
+
+call term_start(["sh","-c", "printf 'VimRC Loaded!' && sleep 1"], {"term_finish": "close", "term_rows": 1})
