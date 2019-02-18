@@ -17,6 +17,8 @@ set -x MAKEFLAGS -j(nproc) #Make make use all cores, makes AUR faster
 abbr v 'vim'
 abbr r 'ranger'
 abbr x 'xdg-open'
+abbr h 'highlight'
+abbr c 'cat'
 
 abbr re 'exec $SHELL' # Restart the current shell
 abbr temp 'cd (mktemp -d)'
