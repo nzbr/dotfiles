@@ -40,6 +40,7 @@ endif
 		Plug 'tpope/vim-fugitive'
 		Plug 'vim-pandoc/vim-pandoc'
 		Plug 'vim-pandoc/vim-pandoc-syntax'
+		Plug 'aklt/plantuml-syntax'
 	call plug#end()
 
 "Powerline
@@ -157,6 +158,7 @@ command! -nargs=0 RC      :edit $MYVIMRC
 
 "Misc
 	map <C-g> :Goyo \| set linebreak<CR>
+	map <S-F7> :set spell!<CR>
 
 "NERDTree
 	map <C-e> :NERDTreeToggle<CR>
@@ -183,6 +185,9 @@ command! -nargs=0 RC      :edit $MYVIMRC
 	command! -nargs=0 Javac :Compile javac "%"
 	command! -nargs=0 JavaRun :Run java "%:r"
 	command! -nargs=0 Java :Run sh -c "echo '$ javac' \\'%\\' && javac '%' && echo '$ java' \\'%:r\\' && java '%:r'"
+
+"PlantUML
+	autocmd FileType plantuml autocmd BufWritePost <buffer> make
 
 
 call term_start(["sh","-c", "printf 'VimRC Loaded!' && sleep 1"], {"term_finish": "close", "term_rows": 1})
