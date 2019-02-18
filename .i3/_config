@@ -85,6 +85,7 @@ for_window [class="ksplashqml"] floating enable, border none, move position cent
 
 # Floating windows
 for_window [class="Pamac-manager"] floating enable
+for_window [class="[Qq]emu-.*"] floating enable
 
 # The Anchor Docking Design package is needed to make this work
 for_window [class="[Ll]azarus" title="^(?!Lazarus-IDE).*"] floating enable
@@ -92,7 +93,6 @@ for_window [class="[Ll]azarus" title="^(?!Lazarus-IDE).*"] floating enable
 # Automatically make PDF reader tabbed to what it was started from
 for_window [class="Evince"] layout tabbed
 for_window [class="Zathura"] layout tabbed
-
 
 ##KEYBINDINGS
 #  _  __            ____  _           _ _
@@ -187,6 +187,9 @@ bindsym $mod+Shift+Return exec $filemanager
 bindsym $mod+d exec --no-startup-id krunner
 bindsym $mod+Shift+e exec --no-startup-id qdbus org.kde.ksmserver /KSMServer logout 1 -1 0
 bindsym Control+Print exec --no-startup-id spectacle
+
+# Boot Windows VM
+bindsym $mod+Shift+w exec --no-startup-id launchwindows.sh
 
 
 ##COLORS
