@@ -32,7 +32,7 @@ endif
 		Plug 'jreybert/vimagit'
 		Plug 'junegunn/goyo.vim'
 		Plug 'machakann/vim-highlightedyank'
-		Plug 'neoclide/coc.nvim', {'tag': '*', 'do': { -> coc#util#install()}}
+		"Plug 'neoclide/coc.nvim', {'tag': '*', 'do': { -> coc#util#install()}}
 		Plug 'PotatoesMaster/i3-vim-syntax'
 		Plug 'Raimondi/delimitMate'
 		Plug 'scrooloose/nerdtree'
@@ -41,6 +41,8 @@ endif
 		Plug 'vim-pandoc/vim-pandoc'
 		Plug 'vim-pandoc/vim-pandoc-syntax'
 		Plug 'aklt/plantuml-syntax'
+		Plug 'anned20/vimsence'
+		Plug 'Chiel92/vim-autoformat'
 	call plug#end()
 
 "Powerline
