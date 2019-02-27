@@ -189,6 +189,7 @@ command! -nargs=0 RC      :edit $MYVIMRC
 	command! -nargs=0 Java :Run sh -c "echo '$ javac' \\'%\\' && javac '%' && echo '$ java' \\'%:r\\' && java '%:r'"
 
 "PlantUML
+	command! UmlOpen :XdgOpen %:r.png
 	autocmd FileType plantuml autocmd BufWritePost <buffer> make
 
 
