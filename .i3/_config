@@ -4,7 +4,6 @@
 # | |___) | | |_) | (_| | | | | (_| |
 # |_|____/  |_.__/ \__,_|_| |_|\__, |
 #                              |___/
-# vim: set syntax=i3
 
 ##SETTINGS
 #  ____       _   _   _
@@ -200,16 +199,16 @@ bindsym $mod+Shift+w exec --no-startup-id launchwindows.sh
 #  \____\___/|_|\___/|_|  |___/
 
 # Use colors from Wal
-set_from_resource $text-color i3wm.color7 #f0f0f0
-set_from_resource $bg-color i3wm.color2 #f0f0f0
-set_from_resource $inactive-bg-color  i3wm.color1 #2f343f
-set_from_resource $inactive-text-color i3wm.color7 #676E7D
-set_from_resource $urgent-bg-color  i3wm.color2  #E53935
-set_from_resource $indicator-color i3wm.color5 #00ff00
+#set_from_resource $text-color i3wm.color7 #f0f0f0
+#set_from_resource $bg-color i3wm.color2 #f0f0f0
+#set_from_resource $inactive-bg-color  i3wm.color1 #2f343f
+#set_from_resource $inactive-text-color i3wm.color7 #676E7D
+#set_from_resource $urgent-bg-color  i3wm.color2  #E53935
+#set_from_resource $indicator-color i3wm.color5 #00ff00
 
 # window colors
 #                       border              background         text                 indicator
-client.focused          $bg-color           $bg-color          $text-color          $indicator-color
-client.unfocused        $inactive-bg-color  $inactive-bg-color $inactive-text-color $indicator-color
-client.focused_inactive $inactive-bg-color  $inactive-bg-color $inactive-text-color $indicator-color
-client.urgent           $urgent-bg-color    $urgent-bg-color   $text-color          $indicator-color
+#client.focused          $bg-color           $bg-color          $text-color          $indicator-color
+#client.unfocused        $inactive-bg-color  $inactive-bg-color $inactive-text-color $indicator-color
+#client.focused_inactive $inactive-bg-color  $inactive-bg-color $inactive-text-color $indicator-color
+#client.urgent           $urgent-bg-color    $urgent-bg-color   $text-color          $indicator-color
