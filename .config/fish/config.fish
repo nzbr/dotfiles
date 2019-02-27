@@ -15,6 +15,7 @@ set -x MAKEFLAGS -j(nproc) #Make make use all cores, makes AUR faster
 
 # Shortcuts
 abbr v 'vim'
+abbr vrc 'vim ~/.vimrc'
 abbr r 'ranger'
 abbr x 'xdg-open'
 abbr h 'highlight'
