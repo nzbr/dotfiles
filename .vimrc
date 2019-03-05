@@ -16,9 +16,10 @@ if &shell == '/usr/bin/fish'
 endif
 
 "Auto-Install Plug
-	if empty(glob('~/.vim/autoload/plug.vim'))
-	silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-	autocmd VimEnter * PlugUpdate --sync | PlugUpgrade | source $MYVIMRC
+	if has("unix")
+		if empty(glob('~/.vim/autoload/plug.vim'))
+			silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+		endif
 	endif
 
 "Plugins
@@ -111,6 +112,24 @@ set spelllang=de_de,en_us
 	autocmd BufWritePre * if &ft!="pandoc"|%s/\s\+$//e
 	"autocmd BufReadPost * if &ft!="pandoc"|%s/\s\+$//e
 
+"Windows
+	if has("gui_running")
+		colorscheme slate
+		if has("gui_gtk2")
+			set guifont=Inconsolata\ 12
+		elseif has("gui_macvim")
+			set guifont=Menlo\ Regular:h14
+		elseif has("gui_win32") || has("gui_win64")
+			set guioptions=icpM
+			if (v:version == 704 && has("patch393")) || v:version > 704
+				set renderoptions=type:directx,level:0.75,gamma:1.25,contrast:0.25,
+					\geom:1,renmode:5,taamode:1
+			endif
+			set backspace=indent,eol,start
+			set guifont=Ubuntu\ Mono\ derivative\ Powerlin:h13
+		endif
+	endif
+
 "NERDTree
 	let g:NERDTreeShowIgnoredStatus = 1
 	"Autostart if vim is opened without file
@@ -193,4 +212,6 @@ command! -nargs=0 RC      :edit $MYVIMRC
 	autocmd FileType plantuml autocmd BufWritePost <buffer> make
 
 
-call term_start(["sh","-c", "printf 'VimRC Loaded!' && sleep 1"], {"term_finish": "close", "term_rows": 1})
+if has("unix")
+	call term_start(["sh","-c", "printf 'VimRC Loaded!' && sleep 1"], {"term_finish": "close", "term_rows": 1})
+endif
