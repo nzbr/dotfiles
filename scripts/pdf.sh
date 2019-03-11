@@ -14,9 +14,10 @@ fi
 # pandoc-include-code (AUR)
 # pandoc-plantuml-filter-git (PIP3)
 
+#	--filter pandoc-include-code \
+
 pandoc \
 	--template $TEMPLATE \
 	--filter pandoc-plantuml \
-	--filter pandoc-include-code \
 	-o "${1%.*}.pdf" \
 	"$1"

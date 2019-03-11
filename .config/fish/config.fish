@@ -26,8 +26,8 @@ abbr temp 'cd (mktemp -d)'
 
 # use exa instead of ls
 abbr ls 'exa'
-abbr la 'exa -la'
-abbr l 'exa -l'
+abbr la 'exa -la --git'
+abbr l 'exa -l --git'
 
 # QEMU
 set kvmcmd 'qemu-system-x86_64 --enable-kvm'
