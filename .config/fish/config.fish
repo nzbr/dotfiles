@@ -24,9 +24,11 @@ abbr re 'exec $SHELL' # Restart the current shell
 abbr temp 'cd (mktemp -d)'
 
 # use exa instead of ls
-abbr ls 'exa'
-abbr la 'exa -la --git'
-abbr l 'exa -l --git'
+if command -v exa
+	abbr ls 'exa'
+	abbr la 'exa -la --git'
+	abbr l 'exa -l --git'
+end
 
 # QEMU
 set kvmcmd 'qemu-system-x86_64 --enable-kvm'
