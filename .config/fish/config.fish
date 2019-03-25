@@ -24,7 +24,7 @@ abbr re 'exec $SHELL' # Restart the current shell
 abbr temp 'cd (mktemp -d)'
 
 # use exa instead of ls
-if command -v exa
+if command -v exa >/dev/null
 	abbr ls 'exa'
 	abbr la 'exa -la --git'
 	abbr l 'exa -l --git'
