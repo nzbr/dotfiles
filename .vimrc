@@ -24,26 +24,27 @@ endif
 
 "Plugins
 	call plug#begin('~/.vim/bundle')
-		"Plug 'neoclide/coc.nvim', {'tag': '*', 'do': { -> coc#util#install()}}
-		Plug 'Chiel92/vim-autoformat'
-		Plug 'PotatoesMaster/i3-vim-syntax'
-		Plug 'Raimondi/delimitMate'
-		Plug 'airblade/vim-gitgutter'
-		Plug 'aklt/plantuml-syntax'
-		if has("python3") | Plug 'anned20/vimsence' | endif
-		Plug 'aquach/vim-http-client'
-		Plug 'dag/vim-fish'
-		Plug 'dhruvasagar/vim-table-mode'
-		Plug 'godlygeek/tabular'
-		Plug 'jamessan/vim-gnupg'
-		Plug 'jreybert/vimagit'
-		Plug 'junegunn/goyo.vim'
-		Plug 'machakann/vim-highlightedyank'
-		Plug 'scrooloose/nerdtree'
-		Plug 'tpope/vim-eunuch'
-		Plug 'tpope/vim-fugitive'
-		Plug 'vim-pandoc/vim-pandoc'
-		Plug 'vim-pandoc/vim-pandoc-syntax'
+			"Plug 'neoclide/coc.nvim', {'tag': '*', 'do': { -> coc#util#install()}}
+			Plug 'Chiel92/vim-autoformat'
+			Plug 'LnL7/vim-nix'
+			Plug 'PotatoesMaster/i3-vim-syntax'
+			Plug 'Raimondi/delimitMate'
+			Plug 'airblade/vim-gitgutter'
+			Plug 'aklt/plantuml-syntax'
+			Plug 'aquach/vim-http-client'
+			Plug 'dag/vim-fish'
+			Plug 'dhruvasagar/vim-table-mode'
+			Plug 'godlygeek/tabular'
+			Plug 'jamessan/vim-gnupg'
+			Plug 'jreybert/vimagit'
+			Plug 'junegunn/goyo.vim'
+			Plug 'machakann/vim-highlightedyank'
+			Plug 'scrooloose/nerdtree'
+			Plug 'tpope/vim-eunuch'
+			Plug 'tpope/vim-fugitive'
+			Plug 'vim-pandoc/vim-pandoc'
+			Plug 'vim-pandoc/vim-pandoc-syntax'
+			if has("python3") | Plug 'anned20/vimsence' | endif
 	call plug#end()
 
 "Powerline
@@ -146,12 +147,17 @@ endif
 "| |__| (_) | | | | | | | | | | | (_| | | | | (_| \__ \
 " \____\___/|_| |_| |_|_| |_| |_|\__,_|_| |_|\__,_|___/
 
-command! -nargs=+ Compile :term ++close ++rows=10 vimcompile.sh <args>
-command! -nargs=+ Run     :term ++rows=10 <args>
+command! -nargs=+ Compile               :term ++close ++rows=10 vimcompile.sh <args>
+command! -nargs=+ Run                   :term ++rows=10 <args>
 
-command! -nargs=+ XdgOpen :term ++close ++hidden xdg-open <args>
+command! -nargs=+ XdgOpen               :term ++close ++hidden xdg-open <args>
 
-command! -nargs=0 RC      :edit $MYVIMRC
+command! -nargs=0 RC                    :edit $MYVIMRC
+
+command! -nargs=0 -range Comment        :exe ":s/[^[:blank:]]/" . b:comment . "&/"
+command! -nargs=0 -range UnComment      :exe ":s/" . b:comment . "//"
+command! -nargs=0 -range MultiComment   :exe "'<,'>:s/[^[:blank:]]/" . b:comment . "&/"
+command! -nargs=0 -range MultiUnComment :exe "'<,'>:s/" . b:comment . "//"
 
 " _  __          _     _           _
 "| |/ /___ _   _| |__ (_)_ __   __| |___
@@ -186,12 +192,27 @@ command! -nargs=0 RC      :edit $MYVIMRC
 "NERDTree
 	map <C-e> :NERDTreeToggle<CR>
 
+"Comments
+	nmap <C-n> :Comment<CR>
+	nmap <C-m> :UnComment<CR>
+	vmap <C-n> :MultiComment<CR>
+	vmap <C-m> :MultiUnComment<CR>
+
+"Tab
+	nnoremap <Tab> :s/^/\t/ <bar> :retab <CR>
+	vnoremap <Tab> :s/^/\t/ <bar> :retab <CR>
+	nnoremap <S-Tab> :s/^\(\t\<bar>^    \)// <CR>
+	vnoremap <S-Tab> :s/^\(\t\<bar>^    \)// <CR>
+
+
 " _
 "| |    __ _ _ __   __ _ _   _  __ _  __ _  ___  ___
 "| |   / _` | '_ \ / _` | | | |/ _` |/ _` |/ _ \/ __|
 "| |__| (_| | | | | (_| | |_| | (_| | (_| |  __/\__ \
 "|_____\__,_|_| |_|\__, |\__,_|\__,_|\__, |\___||___/
 "                  |___/             |___/
+
+autocmd FileType * let b:comment=&commentstring[:-3] "Should be fine for most languages
 
 "Markdown + LaTeX
 	command! -nargs=0 Pandoc :Compile pdf.sh "%"

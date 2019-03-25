@@ -42,5 +42,9 @@ echo "Pre-Processing i3 config"
 i3bang $HOME/.i3/_config
 sh $HOME/scripts/i3-setmonitors.sh $HOME/.i3/config
 
+if isdocked.sh; then
+	barrier &
+fi
+
 echo "Starting KDE"
 exec startkde "$@"
