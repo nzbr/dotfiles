@@ -24,7 +24,13 @@ endif
 
 "Plugins
 	call plug#begin('~/.vim/bundle')
+		"Plug 'neoclide/coc.nvim', {'tag': '*', 'do': { -> coc#util#install()}}
+		Plug 'Chiel92/vim-autoformat'
+		Plug 'PotatoesMaster/i3-vim-syntax'
+		Plug 'Raimondi/delimitMate'
 		Plug 'airblade/vim-gitgutter'
+		Plug 'aklt/plantuml-syntax'
+		if has("python3") | Plug 'anned20/vimsence' | endif
 		Plug 'aquach/vim-http-client'
 		Plug 'dag/vim-fish'
 		Plug 'dhruvasagar/vim-table-mode'
@@ -33,25 +39,21 @@ endif
 		Plug 'jreybert/vimagit'
 		Plug 'junegunn/goyo.vim'
 		Plug 'machakann/vim-highlightedyank'
-		"Plug 'neoclide/coc.nvim', {'tag': '*', 'do': { -> coc#util#install()}}
-		Plug 'PotatoesMaster/i3-vim-syntax'
-		Plug 'Raimondi/delimitMate'
 		Plug 'scrooloose/nerdtree'
 		Plug 'tpope/vim-eunuch'
 		Plug 'tpope/vim-fugitive'
 		Plug 'vim-pandoc/vim-pandoc'
 		Plug 'vim-pandoc/vim-pandoc-syntax'
-		Plug 'aklt/plantuml-syntax'
-		Plug 'anned20/vimsence'
-		Plug 'Chiel92/vim-autoformat'
 	call plug#end()
 
 "Powerline
-	python from powerline.vim import setup as powerline_setup
-	python powerline_setup()
-	python del powerline_setup
-	set rtp+=/usr/share/powerline/bindings/vim
-	let g:Powerline_symbols = "fancy"
+	if has("python")
+		python from powerline.vim import setup as powerline_setup
+		python powerline_setup()
+		python del powerline_setup
+		set rtp+=/usr/share/powerline/bindings/vim
+		let g:Powerline_symbols = "fancy"
+	endif
 	set laststatus=2
 	set noshowmode
 
@@ -67,9 +69,9 @@ endif
 	filetype plugin indent on
 
 "Spell-Check
-autocmd FileType * setlocal nospell
-set spellfile=~/Dokumente/vim-spell.utf-8.add
-set spelllang=de_de,en_us
+	autocmd FileType * setlocal nospell
+	set spellfile=~/Dokumente/vim-spell.utf-8.add
+	set spelllang=de_de,en_us
 
 "Buffers
 	set hidden
