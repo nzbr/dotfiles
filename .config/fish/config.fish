@@ -85,5 +85,15 @@ function fish_greeting
 	if [ "$SUDO_USER" = "" ]
 		bash --login -c neofetch
 	end
+	if command -v pacman >/dev/null
+		if pacman -Qu ^&1 >/dev/null
+			echo '
+###################################
+#    !!! UPDATES AVAILABLE !!!    #
+###################################
+			'
+			pacman -Qu
+		end
+	end
 end
 
