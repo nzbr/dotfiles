@@ -48,10 +48,10 @@ endif
 	call plug#end()
 
 "Powerline
-	if has("python")
-		python from powerline.vim import setup as powerline_setup
-		python powerline_setup()
-		python del powerline_setup
+	if has("python3")
+		python3 from powerline.vim import setup as powerline_setup
+		python3 powerline_setup()
+		python3 del powerline_setup
 		set rtp+=/usr/share/powerline/bindings/vim
 		let g:Powerline_symbols = "fancy"
 	endif
