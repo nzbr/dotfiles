@@ -22,6 +22,7 @@ abbr h 'highlight'
 
 abbr re 'exec $SHELL' # Restart the current shell
 abbr temp 'cd (mktemp -d)'
+abbr mkdir 'mkdir -p'
 
 # use exa instead of ls
 if command -v exa >/dev/null
