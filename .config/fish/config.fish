@@ -19,7 +19,6 @@ abbr vrc 'vim ~/.vimrc'
 abbr r 'ranger'
 abbr x 'xdg-open'
 abbr h 'highlight'
-abbr c 'cat'
 
 abbr re 'exec $SHELL' # Restart the current shell
 abbr temp 'cd (mktemp -d)'
@@ -62,6 +61,17 @@ abbr hgch    'git --git-dir=$HOME/.git-hidden --work-tree=$HOME checkout'
 abbr hgd     'git --git-dir=$HOME/.git-hidden --work-tree=$HOME diff'
 abbr hgt     'git --git-dir=$HOME/.git-hidden --work-tree=$HOME log --graph --oneline --all'
 
+function c
+	if [ "$argv" = "" ]
+		set argv .
+	end
+	if [ -f $argv ]
+		cat $argv
+	else
+		ls $argv
+	end
+end
+
 function mcd
 	mkdir -p $argv
 	cd $argv
@@ -71,9 +81,9 @@ if test -f ~/.secrets
 	source ~/.secrets
 end
 
-if [ "$STARTED" != "true" ]; and [ (id -u) != "0" ]; and tty >/dev/null # Run neofetch when opening a terminal (or loggin in)
-	tty
-	neofetch
-	set -x STARTED true
+function fish_greeting
+	if [ "$SUDO_USER" = "" ]
+		bash --login -c neofetch
+	end
 end
 
