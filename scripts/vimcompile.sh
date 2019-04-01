@@ -3,7 +3,7 @@ temp=$(mktemp)
 echo "\$ $@" | tee $temp
 
 set -o pipefail
-"$@" |& tee /dev/stderr >>$temp
+"$@" |& tee -a $temp
 code="$?"
 set +o pipefail
 if ! [ $code -eq 0 ]; then
