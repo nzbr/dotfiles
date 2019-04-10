@@ -237,5 +237,7 @@ autocmd FileType * let b:comment=&commentstring[:-3] "Should be fine for most la
 	autocmd FileType plantuml autocmd BufWritePost <buffer> Plantuml
 
 if has("unix")
-	call term_start(["sh","-c", "printf 'VimRC Loaded!' && sleep 1"], {"term_finish": "close", "term_rows": 1})
+	if has("terminal")
+		call term_start(["sh","-c", "printf 'VimRC Loaded!' && sleep 1"], {"term_finish": "close", "term_rows": 1})
+	endif
 endif
