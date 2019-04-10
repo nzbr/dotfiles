@@ -64,6 +64,14 @@ abbr hgch    'git --git-dir=$HOME/.git-hidden --work-tree=$HOME checkout'
 abbr hgd     'git --git-dir=$HOME/.git-hidden --work-tree=$HOME diff'
 abbr hgt     'git --git-dir=$HOME/.git-hidden --work-tree=$HOME log --graph --oneline --all'
 
+function cd
+	builtin cd $argv
+	if command -v exa >/dev/null
+		exa
+	else
+		ls
+	end
+end
 function c
 	if [ "$argv" = "" ]
 		set argv .
@@ -96,6 +104,20 @@ function fish_greeting
 ###################################
 			'
 			pacman -Qu
+			printf '\n'
+			read input -P "Do you want to update now? [y/N] "
+			if command -v yay >/dev/null
+				set upcmd "yay"
+			else
+				set upcmd "pacman -Syu"
+			end
+			switch $input
+				case y Y
+					$upcmd
+					exec $SHELL
+				case '*'
+					printf 'You can still update later by using\n\t'"$upcmd"'\n'
+			end
 		end
 	end
 end

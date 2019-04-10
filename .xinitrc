@@ -7,9 +7,6 @@ env
 # Setup PRIME
 if [ -f ~/.prime ]; then xrandr --setprovideroffloadsink nouveau Intel; fi
 
-# Wallpaper
-feh --bg-fill ~/Bilder/wallpaper
-
 # KSplash
 #echo "Starting KSplash"
 #timeout 60s ksplashqml --window --nofork arch.wallpaper &
@@ -26,9 +23,6 @@ XDG_CURRENT_DESKTOP=KDE
 export DESKTOP_SESSION=kde
 
 export KDEWM=$(which i3)
-
-echo "Starting compton"
-compton -b --config ~/.config/compton.conf
 
 echo "Setting theme"
 #wal -R

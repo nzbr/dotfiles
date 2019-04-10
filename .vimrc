@@ -39,6 +39,7 @@ endif
 			Plug 'jreybert/vimagit'
 			Plug 'junegunn/goyo.vim'
 			Plug 'machakann/vim-highlightedyank'
+			Plug 'rhysd/vim-grammarous'
 			Plug 'scrooloose/nerdtree'
 			Plug 'tpope/vim-eunuch'
 			Plug 'tpope/vim-fugitive'
@@ -215,15 +216,15 @@ command! -nargs=0 -range MultiUnComment :exe "'<,'>:s/" . b:comment . "//"
 autocmd FileType * let b:comment=&commentstring[:-3] "Should be fine for most languages
 
 "Markdown + LaTeX
-	command! -nargs=0 Pandoc :Compile pdf.sh "%"
+	command! -nargs=0 PandocCompile :Compile pdf.sh "%"
 	command! -nargs=0 PdfOpen :XdgOpen %:r.pdf
 	autocmd FileType pandoc set nofoldenable
-	autocmd FileType pandoc autocmd BufWritePost <buffer> CompilePandoc
+	autocmd FileType pandoc autocmd BufWritePost <buffer> PandocCompile
 
 "fish
 	autocmd FileType fish compiler fish
 	autocmd FileType fish setlocal textwidth=79
-	autocmd FileType fish setlocal foldmethod=expr
+	autocmd FileType fish setlocal nofoldenable
 
 "Java
 	command! -nargs=0 Javac :Compile javac "%"
@@ -231,9 +232,9 @@ autocmd FileType * let b:comment=&commentstring[:-3] "Should be fine for most la
 	command! -nargs=0 Java :Run sh -c "echo '$ javac' \\'%\\' && javac '%' && echo '$ java' \\'%:r\\' && java '%:r'"
 
 "PlantUML
-	command! UmlOpen :XdgOpen %:r.png
-	autocmd FileType plantuml autocmd BufWritePost <buffer> make
-
+	command! -nargs=0 UmlOpen :XdgOpen %:r.png
+	command! -nargs=0 Plantuml :Compile plantuml "%"
+	autocmd FileType plantuml autocmd BufWritePost <buffer> Plantuml
 
 if has("unix")
 	call term_start(["sh","-c", "printf 'VimRC Loaded!' && sleep 1"], {"term_finish": "close", "term_rows": 1})
