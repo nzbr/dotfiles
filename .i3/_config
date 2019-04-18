@@ -98,8 +98,8 @@ for_window [class="[Qq]emu-.*"] floating enable
 for_window [class="[Ll]azarus" title="^(?!Lazarus-IDE).*"] floating enable
 
 # Automatically make PDF reader tabbed to what it was started from
-for_window [class="Evince"] layout tabbed
-for_window [class="Zathura"] layout tabbed
+# for_window [class="Evince"] layout tabbed
+# for_window [class="Zathura"] layout tabbed
 
 ##KEYBINDINGS
 #  _  __            ____  _           _ _
