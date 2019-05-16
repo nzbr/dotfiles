@@ -45,7 +45,7 @@ font pango:Droid Sans 11
 # /_/   \_\__,_|\__\___/|___/\__\__,_|_|   \__|
 
 # Wallpaper
-exec --no-startup-id feh --bg-fill ~/Bilder/wallpaper
+exec --no-startup-id nitrogen --restore
 
 # Compton
 # exec --no-startup-id compton -b --config ~/.config/compton.conf
