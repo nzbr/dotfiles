@@ -46,7 +46,7 @@ abbr gpl    'git pull'
 abbr gps    'git push'
 abbr gst    'git stash'
 abbr gsp    'git stash pop'
-abbr gch    'git checkout'
+abbr gco    'git checkout'
 abbr gd     'git diff'
 abbr gt     'git log --graph --oneline --all'
 
@@ -93,9 +93,9 @@ if test -f ~/.secrets
 end
 
 function fish_greeting
-	if [ "$SUDO_USER" = "" ]
-		bash --login -c neofetch
-	end
+	#if [ "$SUDO_USER" = "" ]
+	#	bash --login -c neofetch
+	#end
 	if command -v pacman >/dev/null
 		if pacman -Qu ^&1 >/dev/null
 			echo '
@@ -105,19 +105,6 @@ function fish_greeting
 			'
 			pacman -Qu
 			printf '\n'
-			read input -P "Do you want to update now? [y/N] "
-			if command -v yay >/dev/null
-				set upcmd "yay"
-			else
-				set upcmd "pacman -Syu"
-			end
-			switch $input
-				case y Y
-					$upcmd
-					exec $SHELL
-				case '*'
-					printf 'You can still update later by using\n\t'"$upcmd"'\n'
-			end
 		end
 	end
 end

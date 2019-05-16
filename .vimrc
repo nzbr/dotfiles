@@ -41,8 +41,10 @@ endif
 			Plug 'machakann/vim-highlightedyank'
 			Plug 'rhysd/vim-grammarous'
 			Plug 'scrooloose/nerdtree'
+			Plug 'tpope/vim-commentary'
 			Plug 'tpope/vim-eunuch'
 			Plug 'tpope/vim-fugitive'
+			Plug 'tpope/vim-surround'
 			Plug 'vim-pandoc/vim-pandoc'
 			Plug 'vim-pandoc/vim-pandoc-syntax'
 			if has("python3") | Plug 'anned20/vimsence' | endif

@@ -18,11 +18,11 @@ set $mod Mod4
 
 # Disable titlebars
 # for_window [class="^.*"] border pixel 3
-default_border pixel 3
+default_border pixel 1
 default_floating_border normal
 
 # i3-gaps specific
-gaps inner 5
+gaps inner 10
 smart_gaps on
 hide_edge_borders smart
 smart_borders on
@@ -48,7 +48,7 @@ font pango:Droid Sans 11
 exec --no-startup-id feh --bg-fill ~/Bilder/wallpaper
 
 # Compton
-exec --no-startup-id compton -b --config ~/.config/compton.conf
+# exec --no-startup-id compton -b --config ~/.config/compton.conf
 
 # Xresources
 exec --no-startup-id xrdb ~/.Xresources
@@ -91,11 +91,13 @@ for_window [class="ksplashqml"] floating enable, border none, move position cent
 #    \_/\_/  |_|_| |_|\__,_|\___/ \_/\_/   |_| \_\\__,_|_|\___||___/
 
 # Floating windows
-for_window [class="Pamac-manager"] floating enable
-for_window [class="[Qq]emu-.*"] floating enable
+for_window [class="Pamac-manager"] floating enable, border normal
+for_window [class="[Qq]emu-.*"] floating enable, border normal
+for_window [class="[Bb]lueberry.py"] floating enable, border normal
+for_window [class="anbox"] floating enable, border none
 
 # The Anchor Docking Design package is needed to make this work
-for_window [class="[Ll]azarus" title="^(?!Lazarus-IDE).*"] floating enable
+for_window [class="[Ll]azarus" title="^(?!Lazarus-IDE).*"] floating enable, border normal
 
 # Automatically make PDF reader tabbed to what it was started from
 # for_window [class="Evince"] layout tabbed
@@ -178,8 +180,9 @@ bindsym $mod+r mode "resize"
 # /_/   \_\ .__/| .__/  |____/|_| |_|\___/|_|   \__\___|\__,_|\__|___/
 #         |_|   |_|
 
-set $terminal alacritty
-set $filemanager dolphin
+set $terminal terminology
+# set $terminal alacritty
+set $filemanager pcmanfm-qt
 
 # Open a terminal
 bindsym $mod+Return --release exec $terminal
@@ -190,8 +193,11 @@ bindsym $mod!!<,+Shift,+Control+Shift>+x exec !!<qutebrowser,firefox-developer-e
 # File Manager
 bindsym $mod+Shift+Return exec $filemanager
 
+# dmenu
+bindsym $mod+d exec --no-startup-id i3-dmenu-desktop
+
 # KDE Specific
-bindsym $mod+d exec --no-startup-id krunner
+# bindsym $mod+d exec --no-startup-id krunner
 bindsym $mod+Shift+e exec --no-startup-id qdbus org.kde.ksmserver /KSMServer logout 1 -1 0
 bindsym Control+Print exec --no-startup-id spectacle
 
