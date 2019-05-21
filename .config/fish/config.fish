@@ -8,7 +8,7 @@
 set fish_function_path $fish_function_path "/usr/share/powerline/bindings/fish"
 set plscript '/usr/share/powerline/fish/powerline-setup.fish'
 if test -e $plscript
-	source plscript
+	source $plscript
 end
 source powerline-setup
 
