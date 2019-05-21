@@ -5,12 +5,12 @@
 #  \___\___/|_| |_|_| |_|\__, | (_) |_| |_|___/_| |_|
 #                        |___/
 
-set fish_function_path $fish_function_path "/usr/share/powerline/bindings/fish"
-set plscript '/usr/share/powerline/fish/powerline-setup.fish'
-if test -e $plscript
-	source $plscript
+if test -e "/usr/share/powerline/bindings/fish/powerline-setup.fish"
+	set fish_function_path $fish_function_path "/usr/share/powerline/bindings/fish"
+else
+	set fish_function_path $fish_function_path "/usr/share/powerline/fish"
 end
-source powerline-setup
+powerline-setup
 
 # export shell variables
 set -x EDITOR vim
