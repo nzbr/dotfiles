@@ -16,7 +16,7 @@
 !scripts/vimcompile.sh
 !scripts/pdf.sh
 !scripts/i3-setmonitors.sh
-!scripts/drun.sh
+!scripts/drun
 !.i3
 !.i3/_config
 !.xinitrc
