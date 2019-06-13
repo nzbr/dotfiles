@@ -5,7 +5,11 @@
 #  \___\___/|_| |_|_| |_|\__, | (_) |_| |_|___/_| |_|
 #                        |___/
 
-set fish_function_path $fish_function_path "/usr/share/powerline/bindings/fish"
+if test -e "/usr/share/powerline/bindings/fish/powerline-setup.fish"
+	set fish_function_path $fish_function_path "/usr/share/powerline/bindings/fish"
+else
+	set fish_function_path $fish_function_path "/usr/share/powerline/fish"
+end
 powerline-setup
 
 # export shell variables
