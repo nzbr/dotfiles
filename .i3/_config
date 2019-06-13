@@ -18,13 +18,15 @@ set $mod Mod4
 
 # Disable titlebars
 # for_window [class="^.*"] border pixel 3
-default_border pixel 1
+default_border pixel 2
+# default_border pixel 0
 default_floating_border normal
 
 # i3-gaps specific
-gaps inner 10
-smart_gaps on
-hide_edge_borders smart
+# gaps inner 5
+# smart_gaps on
+# hide_edge_borders on
+# hide_edge_borders smart
 smart_borders on
 
 # Assign workspaces to screens
@@ -174,7 +176,7 @@ bindsym $mod+r mode "resize"
 # /_/   \_\ .__/| .__/  |____/|_| |_|\___/|_|   \__\___|\__,_|\__|___/
 #         |_|   |_|
 
-set $terminal terminology
+set $terminal kitty -1
 # set $terminal alacritty
 set $filemanager pcmanfm-qt
 
