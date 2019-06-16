@@ -115,7 +115,7 @@ endif
 	match Whitespace /\s/
 
 "Delete trailing whitespaces automatically
-	autocmd BufWritePre * if &ft!="pandoc"|%s/\s\+$//e
+	autocmd BufWritePre * if &syntax!="pandoc"|%s/\s\+$//e
 	"autocmd BufReadPost * if &ft!="pandoc"|%s/\s\+$//e
 
 "Windows
