@@ -1,0 +1,13 @@
+#!/bin/bash
+# vim: syntax=sh
+while true; do
+	if [ -f makefile ] || [ -f Makefile ]; then
+		make "$@"
+		exit $?
+	fi
+	cd ..
+	if [ "$(pwd)" == "/" ]; then
+		echo "No makefile found in any parent directory"
+		exit 1
+	fi
+done

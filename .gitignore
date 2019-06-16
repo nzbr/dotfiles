@@ -21,6 +21,7 @@
 !scripts/drun
 !scripts/i3-setmonitors.sh
 !scripts/mdopen.sh
+!scripts/mk
 !scripts/pdf.sh
 !scripts/vimcompile.sh
 
