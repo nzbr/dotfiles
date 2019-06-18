@@ -1,2 +1,2 @@
 #!/bin/bash
-sudo podman run --rm -it -v $PWD:/pwd --hostname docker "$@"
+sudo podman run --rm -it -v $PWD:/pwd --hostname podman "$@"
