@@ -148,7 +148,7 @@ bindsym $mod+Shift+space floating toggle
 bindsym $mod+space focus mode_toggle
 
 # Scratchpad
-bindsym $mod+shift+minus move scratchpad
+bindsym $mod+shift+minus border normal, move scratchpad
 bindsym $mod+minus scratchpad show
 
 # Resizing
@@ -209,12 +209,18 @@ bindsym $mod+Shift+w exec --no-startup-id launchwindows.sh
 #  \____\___/|_|\___/|_|  |___/
 
 # Use colors from Wal
-set_from_resource $text-color i3wm.foreground #f0f0f0
-set_from_resource $bg-color i3wm.color2 #f0f0f0
-set_from_resource $inactive-bg-color  i3wm.color8 #2f343f
-set_from_resource $inactive-text-color i3wm.color7 #676E7D
-set_from_resource $urgent-bg-color  i3wm.color3  #E53935
-set_from_resource $indicator-color i3wm.color1 #00ff00
+# set_from_resource $text-color i3wm.foreground #f0f0f0
+# set_from_resource $bg-color i3wm.color2 #f0f0f0
+# set_from_resource $inactive-bg-color  i3wm.color8 #2f343f
+# set_from_resource $inactive-text-color i3wm.color7 #676E7D
+# set_from_resource $urgent-bg-color  i3wm.color3  #E53935
+# set_from_resource $indicator-color i3wm.color1 #00ff00
+set $text-color "#d3dae3"
+set $bg-color  "#5294e2"
+set $inactive-bg-color   "#383838"
+set $inactive-text-color  "#667176"
+set $urgent-bg-color    "#E53935"
+set $indicator-color  "#00ff00"
 
 # window colors
 #                       border              background         text                 indicator
