@@ -47,7 +47,7 @@ endif
 			Plug 'tpope/vim-surround'
 			Plug 'vim-pandoc/vim-pandoc'
 			Plug 'vim-pandoc/vim-pandoc-syntax'
-			if has("python3") | Plug 'anned20/vimsence' | endif
+			"if has("python3") | Plug 'anned20/vimsence' | endif
 	call plug#end()
 
 "Powerline
@@ -151,6 +151,7 @@ endif
 " \____\___/|_| |_| |_|_| |_| |_|\__,_|_| |_|\__,_|___/
 
 command! -nargs=+ Compile               :term ++close ++rows=10 vimcompile.sh <args>
+command! -nargs=0 MK                    :Compile mk
 command! -nargs=+ Run                   :term ++rows=10 <args>
 
 command! -nargs=+ XdgOpen               :term ++close ++hidden xdg-open <args>
