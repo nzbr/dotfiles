@@ -91,6 +91,7 @@ for_window [class="Pamac-manager"] floating enable, border normal
 for_window [class="[Qq]emu-.*"] floating enable, border normal
 for_window [class="[Bb]lueman-manager"] floating enable, border normal
 for_window [class="anbox"] floating enable, border none
+for_window [class="qterminal"] floating enable, border normal, resize set width 720, resize set height 480
 
 # The Anchor Docking Design package is needed to make this work
 for_window [class="[Ll]azarus" title="^(?!Lazarus-IDE).*"] floating enable, border normal
