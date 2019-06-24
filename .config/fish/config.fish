@@ -24,7 +24,7 @@ abbr r 'ranger'
 abbr x 'xdg-open'
 abbr h 'highlight'
 
-abbr re 'exec $SHELL' # Restart the current shell
+abbr re 'exec fish' # Restart fish
 abbr temp 'cd (mktemp -d)'
 abbr mkdir 'mkdir -p'
 
