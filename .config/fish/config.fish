@@ -18,11 +18,9 @@ set -x PATH $PATH ~/scripts ~/.local/bin
 set -x MAKEFLAGS -j(nproc) #Make make use all cores, makes AUR faster
 
 # Shortcuts
-abbr v 'vim'
-abbr vrc 'vim ~/.vimrc'
+abbr vi 'vim'
 abbr r 'ranger'
 abbr x 'xdg-open'
-abbr h 'highlight'
 
 abbr re 'exec fish' # Restart fish
 abbr temp 'cd (mktemp -d)'
