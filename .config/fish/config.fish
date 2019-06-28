@@ -5,17 +5,24 @@
 #  \___\___/|_| |_|_| |_|\__, | (_) |_| |_|___/_| |_|
 #                        |___/
 
-if test -e "/usr/share/powerline/bindings/fish/powerline-setup.fish"
-	set fish_function_path $fish_function_path "/usr/share/powerline/bindings/fish"
-else
-	set fish_function_path $fish_function_path "/usr/share/powerline/fish"
+if ! test -f $HOME/.fish-powerline
+	echo Searching for powerline fish binding, this may take some time...
+	set powerlinebinding (find -L /usr/share /usr/local/share $HOME/.local -maxdepth 10 -name 'powerline-setup.fish' ^/dev/null | head -n 1)
+	if printf "$powerlinebinding" | sed 's/\s//g' | grep -q '.*'
+		echo "Found powerline binding in $powerlinebinding"
+		echo "source '$powerlinebinding'" >$HOME/.fish-powerline
+		echo powerline-setup >>$HOME/.fish-powerline
+	else
+		echo "Powerline binding was not found!"
+		touch $HOME/.fish-powerline
+	end
 end
-powerline-setup
+source $HOME/.fish-powerline
 
 # export shell variables
 set -x EDITOR vim
 set -x PATH $PATH ~/scripts ~/.local/bin
-set -x MAKEFLAGS -j(nproc) #Make make use all cores, makes AUR faster
+set -x MAKEFLAGS -j(nproc) #Make make use all cores
 
 # Shortcuts
 abbr vi 'vim'
