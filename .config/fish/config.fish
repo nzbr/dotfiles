@@ -39,49 +39,43 @@ abbr qemu-kvm $kvmcmd
 abbr kvm $kvmcmd
 
 # git abbrs
-abbr gcl    'git clone'
-abbr ga     'git add'
-abbr gaa    'git add --all'
-abbr gc     'git commit'
-abbr gf     'git fetch; and git status'
-abbr gpl    'git pull'
-abbr gps    'git push'
-abbr gst    'git stash'
-abbr gsp    'git stash pop'
-abbr gco    'git checkout'
-abbr gd     'git diff'
-abbr gt     'git log --graph --oneline --all'
+abbr gcl     'git clone'
+abbr ga      'git add'
+abbr gaa     'git add --all'
+abbr gc      'git commit'
+abbr gf      'git fetch; git status'
+abbr gpl     'git pull'
+abbr gps     'git push'
+abbr gr      'git reset'
+abbr gst     'git stash'
+abbr gsp     'git stash pop'
+abbr gco     'git checkout'
+abbr gd      'git diff'
+abbr gt      'git log --graph --oneline --all'
 
 # git abbrs for dotfiles
-abbr hgcl    'git --git-dir=$HOME/.git-hidden --work-tree=$HOME clone'
-abbr hga     'git --git-dir=$HOME/.git-hidden --work-tree=$HOME add'
-abbr hgaa    'git --git-dir=$HOME/.git-hidden --work-tree=$HOME add --all'
-abbr hgc     'git --git-dir=$HOME/.git-hidden --work-tree=$HOME commit'
-abbr hgf     'git --git-dir=$HOME/.git-hidden --work-tree=$HOME fetch; and git --git-dir=$HOME/.git-hidden --work-tree=$HOME status'
-abbr hgpl    'git --git-dir=$HOME/.git-hidden --work-tree=$HOME pull'
-abbr hgps    'git --git-dir=$HOME/.git-hidden --work-tree=$HOME push'
-abbr hgst    'git --git-dir=$HOME/.git-hidden --work-tree=$HOME stash'
-abbr hgsp    'git --git-dir=$HOME/.git-hidden --work-tree=$HOME stash pop'
-abbr hgch    'git --git-dir=$HOME/.git-hidden --work-tree=$HOME checkout'
-abbr hgd     'git --git-dir=$HOME/.git-hidden --work-tree=$HOME diff'
-abbr hgt     'git --git-dir=$HOME/.git-hidden --work-tree=$HOME log --graph --oneline --all'
+alias dotgit 'git --git-dir=$HOME/.git-hidden --work-tree=$HOME'
+abbr  hg     'dotgit'
+abbr  hgcl   'dotgit clone'
+abbr  hga    'dotgit add'
+abbr  hgaa   'dotgit add --all'
+abbr  hgc    'dotgit commit'
+abbr  hgf    'dotgit fetch; dotgit status'
+abbr  hgpl   'dotgit pull'
+abbr  hgps   'dotgit push'
+abbr  hgr    'dotgit reset'
+abbr  hgst   'dotgit stash'
+abbr  hgsp   'dotgit stash pop'
+abbr  hgco   'dotgit checkout'
+abbr  hgd    'dotgit diff'
+abbr  hgt    'dotgit log --graph --oneline --all'
 
 function cd
 	builtin cd $argv
 	if command -v exa >/dev/null
-		exa
+		timeout -v 1 exa
 	else
-		ls
-	end
-end
-function c
-	if [ "$argv" = "" ]
-		set argv .
-	end
-	if [ -f $argv ]
-		cat $argv
-	else
-		ls $argv
+		timeout -v 1 ls
 	end
 end
 
