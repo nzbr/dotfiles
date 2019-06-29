@@ -91,24 +91,51 @@ function mcd
 	cd $argv
 end
 
-if test -f ~/.secrets
-	source ~/.secrets
+# Network
+set -x IP4 (curl -m 1 -4s icanhazip.com ^/dev/null)
+set -x IP6 (curl -m 1 -6s icanhazip.com ^/dev/null)
+set -x HOST (host "$IP4" ^/dev/null | awk '{print $NF;}' | head -c -2)
+set -x HOST6 (host "$IP6" ^/dev/null | awk '{print $NF;}' | head -c -2)
+
+# Package manager
+if command -v yay >/dev/null
+	set cnf "yay -Fs"
+	set updatecmd "yay --noconfirm -Fy && yay --noconfirm -Syu"
+else if command -v pacman >/dev/null
+	set cnf "pacman -Fs"
+	set updatecmd "sudo pacman --noconfirm -Fy && sudo pacman --noconfirm -Syu"
+else if command -v apt-get >/dev/null
+	set cnf "echo 'To see suggestions, install command-not-found and restart fish'"
+	if test -f /usr/lib/command-not-found
+		set cnf /usr/lib/command-not-found
+	end
+	set updatecmd "sudo apt-get update && sudo apt-get -y upgrade"
+else if command -v dnf >/dev/null
+	set cnf "dnf provides"
+	set updatecmd "sudo dnf -y upgrade"
 end
 
 function fish_greeting
-	#if [ "$SUDO_USER" = "" ]
-	#	bash --login -c neofetch
-	#end
-	if command -v pacman >/dev/null
-		if pacman -Qu ^&1 >/dev/null
-			echo '
-###################################
-#    !!! UPDATES AVAILABLE !!!    #
-###################################
-			'
-			pacman -Qu
-			printf '\n'
-		end
+	if ! find $HOME -maxdepth 1 -name '.update' -mtime 0 | grep -q '.*'
+		touch $HOME/.update
+		fish -c "$updatecmd"
+		printf "\n\nUpdating dotfiles\n"
+		dotgit pull
 	end
+	printf "\nWelcome to fish!\n================\n\n"
+	printf "User:\t$USER\n"
+	printf "WAN:\tIP4:\t$IP4\n\tIP6:\t$IP6\n\tHOST:\t$HOST\n\tHOST6:\t$HOST6\n"
+	printf "LAN:"
+	ip -o addr | awk '!/^[0-9]*: ?lo|link\/ether/ {print "\t"$2"!\t"$4}' | grep -v ':' | sed 's/!/:/;s@/.*$@@'
+	printf "Date:\t"
+	date
+end
+
+function __fish_command_not_found_handler --on-event fish_command_not_found
+	fish -c "$cnf $argv"
+end
+
+if test -f ~/.secrets
+	source ~/.secrets
 end
 
