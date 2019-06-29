@@ -121,6 +121,7 @@ function fish_greeting
 		fish -c "$updatecmd"
 		printf "\n\nUpdating dotfiles\n"
 		dotgit pull
+		exec fish # Restart
 	end
 	printf "\nWelcome to fish!\n================\n\n"
 	printf "User:\t$USER\n"
