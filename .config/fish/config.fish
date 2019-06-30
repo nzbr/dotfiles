@@ -148,7 +148,7 @@ end
 function __fish_command_not_found_handler --on-event fish_command_not_found
 	printf "$argv is not installed. Showing suggestions:\n"
 	fish -c "$cnf $argv"
-	printf "\n$argv: command not found"
+	printf "\n$argv: command not found\n"
 end
 
 if test -f ~/.post.fish
