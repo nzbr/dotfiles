@@ -5,6 +5,10 @@
 #  \___\___/|_| |_|_| |_|\__, | (_) |_| |_|___/_| |_|
 #                        |___/
 
+if test -f ~/.pre.fish
+	source ~/.pre.fish
+end
+
 if ! test -f $HOME/.fish-powerline
 	echo Searching for powerline fish binding, this may take some time...
 	set powerlinebinding (find -L /usr/share /usr/local/share $HOME/.local -maxdepth 10 -name 'powerline-setup.fish' ^/dev/null | head -n 1)
@@ -136,7 +140,7 @@ function __fish_command_not_found_handler --on-event fish_command_not_found
 	fish -c "$cnf $argv"
 end
 
-if test -f ~/.secrets
-	source ~/.secrets
+if test -f ~/.post.fish
+	source ~/.post.fish
 end
 
