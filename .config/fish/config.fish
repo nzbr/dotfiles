@@ -112,10 +112,10 @@ set -x HOST6 (host "$IP6" ^/dev/null | awk '{print $NF;}' | head -c -2)
 
 # Package manager
 if command -v yay >/dev/null
-	set cnf "yay -Fs"
+	set cnf "yay -Fsq"
 	set updatecmd "yay --noconfirm -Fy && yay --noconfirm -Syu"
 else if command -v pacman >/dev/null
-	set cnf "pacman -Fs"
+	set cnf "pacman -Fsq"
 	set updatecmd "sudo pacman --noconfirm -Fy && sudo pacman --noconfirm -Syu"
 else if command -v apt-get >/dev/null
 	set cnf "echo 'To see suggestions, install command-not-found and restart fish'"
@@ -146,7 +146,9 @@ function fish_greeting
 end
 
 function __fish_command_not_found_handler --on-event fish_command_not_found
+	printf "$argv is not installed. Showing suggestions:\n"
 	fish -c "$cnf $argv"
+	printf "\n$argv: command not found"
 end
 
 if test -f ~/.post.fish
