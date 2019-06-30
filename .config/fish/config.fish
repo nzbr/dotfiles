@@ -129,20 +129,22 @@ else if command -v dnf >/dev/null
 end
 
 function fish_greeting
-	if ! find $HOME -maxdepth 1 -name '.update' -mtime 0 | grep -q '.*'
-		touch $HOME/.update
-		fish -c "$updatecmd"
-		printf "\n\nUpdating dotfiles\n"
-		dotgit pull
-		exec fish # Restart
+	if ! set -q SUDO_USER
+		if ! find $HOME -maxdepth 1 -name '.update' -mtime 0 | grep -q '.*'
+			touch $HOME/.update
+			fish -c "$updatecmd"
+			printf "\n\nUpdating dotfiles\n"
+			dotgit pull
+			exec fish # Restart
+		end
+		printf "\nWelcome to fish!\n================\n\n"
+		printf "User:\t$USER\n"
+		printf "WAN:\tIP4:\t$IP4\n\tIP6:\t$IP6\n\tHOST:\t$HOST\n\tHOST6:\t$HOST6\n"
+		printf "LAN:"
+		ip -o addr | awk '!/^[0-9]*: ?lo|link\/ether/ {print "\t"$2"!\t"$4}' | grep -v ':' | sed 's/!/:/;s@/.*$@@'
+		printf "Date:\t"
+		date
 	end
-	printf "\nWelcome to fish!\n================\n\n"
-	printf "User:\t$USER\n"
-	printf "WAN:\tIP4:\t$IP4\n\tIP6:\t$IP6\n\tHOST:\t$HOST\n\tHOST6:\t$HOST6\n"
-	printf "LAN:"
-	ip -o addr | awk '!/^[0-9]*: ?lo|link\/ether/ {print "\t"$2"!\t"$4}' | grep -v ':' | sed 's/!/:/;s@/.*$@@'
-	printf "Date:\t"
-	date
 end
 
 function __fish_command_not_found_handler --on-event fish_command_not_found
