@@ -140,7 +140,7 @@ function fish_greeting
 		printf "\nWelcome to fish!\n================\n\n"
 		printf "User:\t$USER\n"
 		printf "WAN:\tIP4:\t$IP4\n\tIP6:\t$IP6\n\tHOST:\t$HOST\n\tHOST6:\t$HOST6\n"
-		if commmand -v ip >/dev/null
+		if command -v ip >/dev/null
 			printf "LAN:"
 			ip -o addr | awk '!/^[0-9]*: ?lo|link\/ether/ {print "\t"$2"!\t"$4}' | grep -v ':' | sed 's/!/:/;s@/.*$@@'
 		end
