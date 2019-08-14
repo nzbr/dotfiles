@@ -125,7 +125,7 @@ else if command -v apt-get >/dev/null
 	set updatecmd "sudo apt-get update && sudo apt-get -y upgrade"
 else if command -v dnf >/dev/null
 	set cnf "dnf provides"
-	set updatecmd "sudo dnf -y upgrade"
+	set updatecmd 'sudo dnf -y upgrade --exclude=kernel\* && sudo dnf -y upgrade'
 end
 
 function fish_greeting
