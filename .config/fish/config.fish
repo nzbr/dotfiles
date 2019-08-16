@@ -111,12 +111,19 @@ set -x HOST (host "$IP4" ^/dev/null | awk '{print $NF;}' | head -c -2)
 set -x HOST6 (host "$IP6" ^/dev/null | awk '{print $NF;}' | head -c -2)
 
 # Package manager
-if command -v yay >/dev/null
-	set cnf "yay -Fsq"
-	set updatecmd "yay --noconfirm -Fy && yay --noconfirm -Syu"
-else if command -v pacman >/dev/null
+if command -v pacman >/dev/null
 	set cnf "pacman -Fsq"
 	set updatecmd "sudo pacman --noconfirm -Fy && sudo pacman --noconfirm -Syu"
+    if command -v baph >/dev/null
+        if command -v yay >/Dev/null
+            set updatecmd "yay --noconfirm -Fy && baph -unN"
+        else
+            set updatecmd "sudo pacman --noconfirm -Fy && baph -unN"
+        end
+    else if command -v yay >/dev/null
+        set cnf "yay -Fsq"
+        set updatecmd "yay --noconfirm -Fy && yay --noconfirm -Syu"
+    end
 else if command -v apt-get >/dev/null
 	set cnf "echo 'To see suggestions, install command-not-found and restart fish'"
 	if test -f /usr/lib/command-not-found
