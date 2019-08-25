@@ -110,6 +110,8 @@ set -x IP6 (curl -m 1 -6s icanhazip.com ^/dev/null)
 set -x HOST (host "$IP4" ^/dev/null | awk '{print $NF;}' | head -c -2)
 set -x HOST6 (host "$IP6" ^/dev/null | awk '{print $NF;}' | head -c -2)
 
+set -x KERNEL (uname -sr)
+
 # Package manager
 if command -v pacman >/dev/null
 	set cnf "pacman -Fsq"
@@ -146,6 +148,7 @@ function fish_greeting
 		end
 		printf "\nWelcome to fish!\n================\n\n"
 		printf "User:\t$USER\n"
+		printf "Kernel:\t$KERNEL\n"
 		printf "WAN:\tIP4:\t$IP4\n\tIP6:\t$IP6\n\tHOST:\t$HOST\n\tHOST6:\t$HOST6\n"
 		if command -v ip >/dev/null
 			printf "LAN:"
