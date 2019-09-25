@@ -116,13 +116,7 @@ set -x KERNEL (uname -sr)
 if command -v pacman >/dev/null
 	set cnf "pacman -Fsq"
 	set updatecmd "sudo pacman --noconfirm -Fy && sudo pacman --noconfirm -Syu"
-    if command -v baph >/dev/null
-        if command -v yay >/dev/null
-            set updatecmd "yay --noconfirm -Fy && baph -unN"
-        else
-            set updatecmd "sudo pacman --noconfirm -Fy && baph -unN"
-        end
-    else if command -v yay >/dev/null
+    if command -v yay >/dev/null
         set cnf "yay -Fsq"
         set updatecmd "yay --noconfirm -Fy && yay --noconfirm -Syu"
     end
