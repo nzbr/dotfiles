@@ -48,6 +48,7 @@ font pango:Droid Sans 11
 
 # Xresources
 exec --no-startup-id xrdb ~/.Xresources
+exec --no-startup-id setxkbmap de
 
 ##KDE
 #  _  ______  _____
@@ -92,6 +93,8 @@ for_window [class="[Qq]emu-.*"] floating enable, border normal
 for_window [class="[Bb]lueman-manager"] floating enable, border normal
 for_window [class="anbox"] floating enable, border none
 for_window [class="qterminal"] floating enable, border normal, resize set width 720, resize set height 480
+for_window [class="[Qq]alculate-gtk"] floating enable, border normal
+for_window [class="jetbrains-toolbox"] floating enable, border normal
 
 # The Anchor Docking Design package is needed to make this work
 for_window [class="[Ll]azarus" title="^(?!Lazarus-IDE).*"] floating enable, border normal
@@ -145,7 +148,8 @@ bindsym $mod+f fullscreen toggle
 bindsym $mod+!!<w,e> layout !!<tabbed,toggle split>
 
 # Floating
-bindsym $mod+Shift+space floating toggle
+bindsym $mod+Control+space floating enable, border normal
+bindsym $mod+Mod1+space floating toggle, border toggle, border toggle
 bindsym $mod+space focus mode_toggle
 
 # Scratchpad
@@ -184,6 +188,9 @@ set $filemanager pcmanfm-qt
 # Open a terminal
 bindsym $mod+Return --release exec $terminal
 
+# Floating terminal
+bindsym $mod+T --release exec qterminal
+
 # Browser
 bindsym $mod!!<,+Shift,+Control+Shift>+x exec !!<qutebrowser,firefox-developer-edition,tor-browser>
 
@@ -192,6 +199,9 @@ bindsym $mod+Shift+Return exec $filemanager
 
 # dmenu
 bindsym $mod+d exec --no-startup-id i3-dmenu-desktop
+
+# Qalculate!
+bindsym $mod+Control+Q --release exec qalculate-gtk
 
 # KDE Specific
 # bindsym $mod+d exec --no-startup-id krunner
@@ -216,12 +226,13 @@ bindsym $mod+Shift+w exec --no-startup-id launchwindows.sh
 # set_from_resource $inactive-text-color i3wm.color7 #676E7D
 # set_from_resource $urgent-bg-color  i3wm.color3  #E53935
 # set_from_resource $indicator-color i3wm.color1 #00ff00
-set $text-color "#d3dae3"
-set $bg-color  "#5294e2"
+# set $text-color          "#d2d8e0"
+set $text-color          "#383838"
+set $bg-color            "#5294e2"
 set $inactive-bg-color   "#383838"
-set $inactive-text-color  "#667176"
-set $urgent-bg-color    "#E53935"
-set $indicator-color  "#00ff00"
+set $inactive-text-color "#667176"
+set $urgent-bg-color     "#E53935"
+set $indicator-color     "#00ff00"
 
 # window colors
 #                       border              background         text                 indicator
