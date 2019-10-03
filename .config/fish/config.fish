@@ -41,6 +41,7 @@ set -x MAKEFLAGS -j(nproc) #Make make use all cores
 abbr vi 'vim'
 abbr r 'ranger'
 abbr x 'xdg-open'
+abbr py 'python'
 
 abbr re 'exec fish' # Restart fish
 abbr temp 'pushd (mktemp -d)'
