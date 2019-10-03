@@ -45,6 +45,7 @@ abbr py 'python'
 
 abbr re 'exec fish' # Restart fish
 abbr temp 'pushd (mktemp -d)'
+abbr fupdate 'rm ~/.update; exec fish'
 abbr mkdir 'mkdir -p'
 
 # use exa instead of ls
@@ -64,7 +65,8 @@ abbr gcl     'git clone'
 abbr ga      'git add'
 abbr gaa     'git add --all'
 abbr gc      'git commit'
-abbr gf      'git fetch; git status'
+abbr gf      'git fetch'
+abbr gs      'git fetch; git status'
 abbr gpl     'git pull'
 abbr gps     'git push'
 abbr gr      'git reset'
@@ -81,7 +83,8 @@ abbr  hgcl   'dotgit clone'
 abbr  hga    'dotgit add'
 abbr  hgaa   'dotgit add --all'
 abbr  hgc    'dotgit commit'
-abbr  hgf    'dotgit fetch; dotgit status'
+abbr  hgf    'dotgit fetch'
+abbr  hgs    'dotgit fetch; dotgit status'
 abbr  hgpl   'dotgit pull'
 abbr  hgps   'dotgit push'
 abbr  hgr    'dotgit reset'
@@ -117,13 +120,7 @@ set -x KERNEL (uname -sr)
 if command -v pacman >/dev/null
 	set cnf "pacman -Fsq"
 	set updatecmd "sudo pacman --noconfirm -Fy && sudo pacman --noconfirm -Syu"
-    if command -v baph >/dev/null
-        if command -v yay >/dev/null
-            set updatecmd "yay --noconfirm -Fy && baph -unN"
-        else
-            set updatecmd "sudo pacman --noconfirm -Fy && baph -unN"
-        end
-    else if command -v yay >/dev/null
+    if command -v yay >/dev/null
         set cnf "yay -Fsq"
         set updatecmd "yay --noconfirm -Fy && yay --noconfirm -Syu"
     end

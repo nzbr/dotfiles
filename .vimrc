@@ -163,6 +163,8 @@ command! -nargs=0 -range UnComment      :exe ":s/" . b:comment . "//"
 command! -nargs=0 -range MultiComment   :exe "'<,'>:s/[^[:blank:]]/" . b:comment . "&/"
 command! -nargs=0 -range MultiUnComment :exe "'<,'>:s/" . b:comment . "//"
 
+command! -nargs=0 QR :!qrencode -t ansiutf8 < %
+
 " _  __          _     _           _
 "| |/ /___ _   _| |__ (_)_ __   __| |___
 "| ' // _ \ | | | '_ \| | '_ \ / _` / __|
