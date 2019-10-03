@@ -124,6 +124,10 @@ if command -v pacman >/dev/null
         set cnf "yay -Fsq"
         set updatecmd "yay --noconfirm -Fy && yay --noconfirm -Syu"
     end
+	if command -v pkgfile >/dev/null
+		set cnf "pkgfile"
+		set updatecmd "$updatecmd && sudo pkgfile -u"
+	end
 else if command -v apt-get >/dev/null
 	set cnf "echo 'To see suggestions, install command-not-found and restart fish'"
 	if test -f /usr/lib/command-not-found
