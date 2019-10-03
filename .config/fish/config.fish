@@ -43,7 +43,7 @@ abbr r 'ranger'
 abbr x 'xdg-open'
 
 abbr re 'exec fish' # Restart fish
-abbr temp 'cd (mktemp -d)'
+abbr temp 'pushd (mktemp -d)'
 abbr mkdir 'mkdir -p'
 
 # use exa instead of ls
@@ -138,6 +138,12 @@ else if command -v dnf >/dev/null
 end
 
 function fish_greeting
+	echo "     _____     ____"
+	echo "    /      \  |  o |"
+	echo "   |        |/ ___\| - Jeder bekommt eine Schildkröte!"
+	echo "   |_________/"
+	echo "   |_|_| |_|_|                       https://turtl.me/"
+	echo ""
 	if ! set -q SUDO_USER
 		if ! find $HOME -maxdepth 1 -name '.update' -mtime 0 | grep -q '.*'
 			touch $HOME/.update
@@ -168,4 +174,3 @@ end
 if test -f ~/.post.fish
 	source ~/.post.fish
 end
-
