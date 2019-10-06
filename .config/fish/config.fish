@@ -54,6 +54,12 @@ if command -v exa >/dev/null
 	abbr l 'exa -l --git'
 end
 
+# use colordiff
+if command -v colordiff >/dev/null
+	abbr gdiff (which diff)
+	abbr diff colordiff -u
+end
+
 # QEMU
 set kvmcmd 'qemu-system-x86_64 --enable-kvm'
 abbr qemu-kvm $kvmcmd
