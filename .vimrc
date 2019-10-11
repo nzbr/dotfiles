@@ -61,7 +61,7 @@ endif
 	let g:lightline = {
 		\ 'colorscheme': 'powerline',
 		\ 'active': {
-		\   'left': [ [ 'mode', 'paste' ], [ 'gitbranch', 'readonly', 'filename', 'modified' ] ]
+		\   'left': [ [ 'mode', 'paste' ], [ 'filename', 'gitbranch', 'readonly', 'modified' ] ]
 		\ },
 		\ 'tabline': {
 		\   'left': [['buffers']],
@@ -77,16 +77,19 @@ endif
 		\ 'component_type': {
 		\   'buffers': 'tabsel'
 		\ },
-		\ 'separator': { 'left': '', 'right': ''},
+		\ 'separator': { 'left': '', 'right': '' },
 		\ 'subseparator': { 'left': '', 'right': '' },
-		\ 'tabline_separator': { 'left': '', 'right': ''}
+		\ 'tabline_separator': { 'left': '', 'right': '' },
+		\ 'tabline_subseparator': { 'left': '', 'right': '' }
 		\}
 
 	function! LightlineFilename()
 		return &filetype ==# 'vimfiler' ? vimfiler#get_status_string() :
 			\ &filetype ==# 'unite' ? unite#get_status_string() :
 			\ &filetype ==# 'vimshell' ? vimshell#get_status_string() :
-			\ expand('%:t') !=# '' ? expand('%:t') : '[No Name]'
+			\ expand('%:t') !=# '' ?
+			\ substitute(substitute(expand('%'), '\(.\)\/', '\1  ', 'g'), '^\/', '/  ', '')
+			\ : '[No Name]'
 	endfunction
 
 	let g:unite_force_overwrite_statusline = 0
