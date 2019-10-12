@@ -34,11 +34,16 @@ endif
 			Plug 'aquach/vim-http-client'
 			Plug 'dag/vim-fish'
 			Plug 'dhruvasagar/vim-table-mode'
+			Plug 'glacambre/firenvim'
 			Plug 'godlygeek/tabular'
+			Plug 'itchyny/lightline.vim'
 			Plug 'jamessan/vim-gnupg'
 			Plug 'jreybert/vimagit'
 			Plug 'junegunn/goyo.vim'
 			Plug 'machakann/vim-highlightedyank'
+			Plug 'mbbill/undotree'
+			Plug 'mengelbrecht/lightline-bufferline'
+			Plug 'ollykel/v-vim'
 			Plug 'rhysd/vim-grammarous'
 			Plug 'scrooloose/nerdtree'
 			Plug 'tpope/vim-commentary'
@@ -50,16 +55,49 @@ endif
 			"if has("python3") | Plug 'anned20/vimsence' | endif
 	call plug#end()
 
-"Powerline
-	if has("python3")
-		python3 from powerline.vim import setup as powerline_setup
-		python3 powerline_setup()
-		python3 del powerline_setup
-		set rtp+=/usr/share/powerline/bindings/vim
-		let g:Powerline_symbols = "fancy"
-	endif
+"Powerline/Lightline
 	set laststatus=2
 	set noshowmode
+	let g:lightline = {
+		\ 'colorscheme': 'powerline',
+		\ 'active': {
+		\   'left': [ [ 'mode', 'paste' ], [ 'filename', 'gitbranch', 'readonly', 'modified' ] ]
+		\ },
+		\ 'tabline': {
+		\   'left': [['buffers']],
+		\   'right': [[]]
+		\ },
+		\ 'component_function': {
+		\   'gitbranch': 'fugitive#head',
+		\   'filename':  'LightlineFilename'
+		\ },
+		\ 'component_expand': {
+		\   'buffers': 'lightline#bufferline#buffers'
+		\ },
+		\ 'component_type': {
+		\   'buffers': 'tabsel'
+		\ },
+		\ 'separator': { 'left': '', 'right': '' },
+		\ 'subseparator': { 'left': '', 'right': '' },
+		\ 'tabline_separator': { 'left': '', 'right': '' },
+		\ 'tabline_subseparator': { 'left': '', 'right': '' }
+		\}
+
+	function! LightlineFilename()
+		return &filetype ==# 'vimfiler' ? vimfiler#get_status_string() :
+			\ &filetype ==# 'unite' ? unite#get_status_string() :
+			\ &filetype ==# 'vimshell' ? vimshell#get_status_string() :
+			\ expand('%:t') !=# '' ?
+			\ substitute(substitute(expand('%'), '\(.\)\/', '\1  ', 'g'), '^\/', '/  ', '')
+			\ : '[No Name]'
+	endfunction
+
+	let g:unite_force_overwrite_statusline = 0
+	let g:vimfiler_force_overwrite_statusline = 0
+	let g:vimshell_force_overwrite_statusline = 0
+
+	"let g:lightline#bufferline#show_number = 2
+	let g:lightline#bufferline#unicode_symbols = 1
 
 "Misc
 	set nocompatible    "Disable compatible mode
@@ -138,9 +176,6 @@ endif
 
 "NERDTree
 	let g:NERDTreeShowIgnoredStatus = 1
-	"Autostart if vim is opened without file
-		autocmd StdinReadPre * let s:std_in=1
-		autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
 	"Auto-close vim if only NERDTree is open
 	autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 
@@ -209,6 +244,9 @@ command! -nargs=0 QR :!qrencode -t ansiutf8 < %
 	vnoremap <Tab> :s/^/\t/ <bar> :retab <CR>
 	nnoremap <S-Tab> :s/^\(\t\<bar>^    \)// <CR>
 	vnoremap <S-Tab> :s/^\(\t\<bar>^    \)// <CR>
+
+"UndoTree
+	nnoremap <C-r> :UndotreeToggle <CR>
 
 
 " _

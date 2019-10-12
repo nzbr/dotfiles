@@ -41,10 +41,11 @@ set -x MAKEFLAGS -j(nproc) #Make make use all cores
 abbr vi 'vim'
 abbr r 'ranger'
 abbr x 'xdg-open'
+abbr py 'python'
 
 abbr re 'exec fish' # Restart fish
+abbr temp 'pushd (mktemp -d)'
 abbr fupdate 'rm ~/.update; exec fish'
-abbr temp 'cd (mktemp -d)'
 abbr mkdir 'mkdir -p'
 
 # use exa instead of ls
@@ -52,6 +53,12 @@ if command -v exa >/dev/null
 	abbr ls 'exa'
 	abbr la 'exa -la --git'
 	abbr l 'exa -l --git'
+end
+
+# use colordiff
+if command -v colordiff >/dev/null
+	abbr gdiff (which diff)
+	abbr diff colordiff -u
 end
 
 # QEMU
@@ -123,6 +130,10 @@ if command -v pacman >/dev/null
         set cnf "yay -Fsq"
         set updatecmd "yay --noconfirm -Fy && yay --noconfirm -Syu"
     end
+	if command -v pkgfile >/dev/null
+		set cnf "pkgfile"
+		set updatecmd "$updatecmd && sudo pkgfile -u"
+	end
 else if command -v apt-get >/dev/null
 	set cnf "echo 'To see suggestions, install command-not-found and restart fish'"
 	if test -f /usr/lib/command-not-found
@@ -138,6 +149,12 @@ else if command -v zypper >/dev/null
 end
 
 function fish_greeting
+	echo "     _____     ____"
+	echo "    /      \  |  o |"
+	echo "   |        |/ ___\| - Jeder bekommt eine Schildkröte!"
+	echo "   |_________/"
+	echo "   |_|_| |_|_|                       https://turtl.me/"
+	echo ""
 	if ! set -q SUDO_USER
 		if ! find $HOME -maxdepth 1 -name '.update' -mtime 0 | grep -q '.*'
 			touch $HOME/.update
@@ -168,4 +185,3 @@ end
 if test -f ~/.post.fish
 	source ~/.post.fish
 end
-
