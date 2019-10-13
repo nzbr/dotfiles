@@ -148,6 +148,9 @@ else if command -v apt-get >/dev/null
 else if command -v dnf >/dev/null
 	set cnf "dnf provides"
 	set updatecmd 'sudo dnf -y upgrade --exclude=kernel\* && sudo dnf -y upgrade'
+else if command -v zypper >/dev/null
+	set cnf "cnf"
+	set updatecmd 'zypper dup -y'
 end
 
 function fish_greeting
