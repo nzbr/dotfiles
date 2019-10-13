@@ -61,6 +61,11 @@ if command -v colordiff >/dev/null
 	abbr diff colordiff -u
 end
 
+# use bat instead of cat
+if command -v bat >/dev/null
+	abbr cat bat
+end
+
 # QEMU
 set kvmcmd 'qemu-system-x86_64 --enable-kvm'
 abbr qemu-kvm $kvmcmd
