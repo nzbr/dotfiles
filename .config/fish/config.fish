@@ -47,6 +47,7 @@ abbr re 'exec fish' # Restart fish
 abbr temp 'pushd (mktemp -d)'
 abbr fupdate 'rm ~/.update; exec fish'
 abbr mkdir 'mkdir -p'
+abbr fork 'kitty &; disown'
 
 # use exa instead of ls
 if command -v exa >/dev/null
@@ -166,6 +167,13 @@ function fish_greeting
 			fish -c "$updatecmd"
 			printf "\n\nUpdating dotfiles\n"
 			dotgit pull
+			printf "\n\nUpdateing VIM plugins"
+			if command -v vim >/dev/null
+				vim -c "PlugUpdate | qa"
+			end
+			if command -v nvim >/dev/null
+				nvim -c "PlugUpdate | qa"
+			end
 			exec fish # Restart
 		end
 		printf "\nWelcome to fish!\n================\n\n"
