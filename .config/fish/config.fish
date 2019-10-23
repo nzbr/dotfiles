@@ -167,7 +167,7 @@ function fish_greeting
 			fish -c "$updatecmd"
 			printf "\n\nUpdating dotfiles\n"
 			dotgit pull
-			printf "\n\nUpdateing VIM plugins"
+			printf "\n\nUpdateing VIM plugins\n"
 			if command -v vim >/dev/null
 				vim -c "PlugUpdate | qa"
 			end
