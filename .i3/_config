@@ -49,6 +49,7 @@ font pango:Droid Sans 11
 # Xresources
 exec --no-startup-id xrdb ~/.Xresources
 exec --no-startup-id setxkbmap de
+exec --no-startup-id ~/scripts/alternating_layouts.py
 
 ##KDE
 #  _  ______  _____
@@ -183,7 +184,7 @@ bindsym $mod+r mode "resize"
 
 set $terminal kitty -1
 # set $terminal alacritty
-set $filemanager pcmanfm-qt
+set $filemanager dolphin
 
 # Open a terminal
 bindsym $mod+Return --release exec $terminal
