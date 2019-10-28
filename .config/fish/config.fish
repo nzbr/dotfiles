@@ -49,6 +49,10 @@ abbr fupdate 'rm ~/.update; exec fish'
 abbr mkdir 'mkdir -p'
 abbr fork 'kitty &; disown'
 
+## Colors
+abbr light 'kitty @ set-colors foreground=black background=white; kitty @ set-bacground-opacity 1'
+abbr dark  'kitty @ set-colors --reset; kitty @ set-background-opacity 0.8'
+
 # use exa instead of ls
 if command -v exa >/dev/null
 	abbr ls 'exa'
