@@ -146,18 +146,18 @@ if command -v pacman >/dev/null
 		set cnf "pkgfile"
 		set updatecmd "$updatecmd && sudo pkgfile -u"
 	end
+else if command -v zypper >/dev/null
+	set cnf "cnf"
+	set updatecmd 'zypper dup -y'
+else if command -v dnf >/dev/null
+	set cnf "dnf provides"
+	set updatecmd 'sudo dnf -y upgrade --exclude=kernel\* && sudo dnf -y upgrade'
 else if command -v apt-get >/dev/null
 	set cnf "echo 'To see suggestions, install command-not-found and restart fish'"
 	if test -f /usr/lib/command-not-found
 		set cnf /usr/lib/command-not-found
 	end
 	set updatecmd "sudo apt-get update && sudo apt-get -y upgrade"
-else if command -v dnf >/dev/null
-	set cnf "dnf provides"
-	set updatecmd 'sudo dnf -y upgrade --exclude=kernel\* && sudo dnf -y upgrade'
-else if command -v zypper >/dev/null
-	set cnf "cnf"
-	set updatecmd 'zypper dup -y'
 end
 
 function fish_greeting
