@@ -42,6 +42,7 @@ abbr vi 'vim'
 abbr r 'ranger'
 abbr x 'xdg-open'
 abbr py 'python'
+abbr xc 'xsel -b'
 
 abbr re 'exec fish' # Restart fish
 abbr temp 'pushd (mktemp -d)'
@@ -66,9 +67,10 @@ if command -v colordiff >/dev/null
 	abbr diff colordiff -u
 end
 
-# use bat instead of cat
+# use bat instead of cat/less
 if command -v bat >/dev/null
 	abbr cat bat
+	abbr less bat
 end
 
 # QEMU
@@ -171,11 +173,10 @@ function fish_greeting
 			fish -c "$updatecmd"
 			printf "\n\nUpdating dotfiles\n"
 			dotgit pull
-			printf "\n\nUpdateing VIM plugins\n"
+			printf "\n\nUpdating VIM plugins\n"
 			if command -v vim >/dev/null
 				vim -c "PlugUpdate | qa"
-			end
-			if command -v nvim >/dev/null
+			else if command -v nvim >/dev/null
 				nvim -c "PlugUpdate | qa"
 			end
 			exec fish # Restart
