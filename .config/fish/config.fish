@@ -148,7 +148,7 @@ if command -v pacman >/dev/null
 	end
 else if command -v zypper >/dev/null
 	set cnf "cnf"
-	set updatecmd 'zypper dup -y'
+	set updatecmd 'sudo zypper dup -y'
 else if command -v dnf >/dev/null
 	set cnf "dnf provides"
 	set updatecmd 'sudo dnf -y upgrade --exclude=kernel\* && sudo dnf -y upgrade'
