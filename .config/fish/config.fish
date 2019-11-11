@@ -55,6 +55,7 @@ abbr fork 'kitty &; disown'
 ## Colors
 abbr light 'kitty @ set-colors foreground=black background=white; kitty @ set-bacground-opacity 1'
 abbr dark  'kitty @ set-colors --reset; kitty @ set-background-opacity 0.8'
+abbr neo   'kitty @ set-colors foreground=green background=black; kitty @ set-background-opacity 1'
 
 # use exa instead of ls
 if command -v exa >/dev/null
