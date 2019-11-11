@@ -43,6 +43,8 @@ abbr r 'ranger'
 abbr x 'xdg-open'
 abbr py 'python'
 abbr xc 'xsel -b'
+abbr s 'sudo'
+abbr ssc 'sudo systemctl'
 
 abbr re 'exec fish' # Restart fish
 abbr temp 'pushd (mktemp -d)'
