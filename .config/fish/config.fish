@@ -139,10 +139,10 @@ set -x KERNEL (uname -sr)
 
 # Package manager
 if command -v pacman >/dev/null
-	set cnf "pacman -Fsq"
+	set cnf "pacman -F"
 	set updatecmd "sudo pacman --noconfirm -Fy && sudo pacman --noconfirm -Syu"
     if command -v yay >/dev/null
-        set cnf "yay -Fsq"
+        set cnf "yay"
         set updatecmd "yay --noconfirm -Fy && yay --noconfirm -Syu"
     end
 	if command -v pkgfile >/dev/null
