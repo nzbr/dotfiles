@@ -38,13 +38,14 @@ set -x PATH $PATH ~/scripts ~/.local/bin
 set -x MAKEFLAGS -j(nproc) #Make make use all cores
 
 # Shortcuts
-abbr vi 'vim'
-abbr r 'ranger'
-abbr x 'xdg-open'
+abbr c 'code'
 abbr py 'python'
-abbr xc 'xsel -b'
+abbr r 'ranger'
 abbr s 'sudo'
 abbr ssc 'sudo systemctl'
+abbr vi 'vim'
+abbr x 'xdg-open'
+abbr xc 'xsel -b'
 
 abbr re 'exec fish' # Restart fish
 abbr temp 'pushd (mktemp -d)'
