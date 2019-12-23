@@ -1,6 +1,8 @@
 *
 
+
 !.Xresources
+!.abcde.conf
 !.config
 !.config/alacritty
 !.config/alacritty/alacritty.yml
@@ -21,4 +23,3 @@
 !.zshrc
 !scripts
 !scripts/*
-
