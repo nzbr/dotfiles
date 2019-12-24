@@ -160,8 +160,10 @@ if command -v pacman >/dev/null
         set updatecmd "yay --noconfirm -Fy && yay --noconfirm -Syu"
     end
 	if command -v pkgfile >/dev/null
-		set cnf "pkgfile"
+		set cnf pkgfile
 		set updatecmd "$updatecmd && sudo pkgfile -u"
+	else
+		set cnf "echo -e 'Install pkgfile for faster suggestions\n' >&2; $cnf"
 	end
 else if command -v zypper >/dev/null
 	set cnf "cnf"
@@ -217,7 +219,7 @@ end
 function __fish_command_not_found_handler --on-event fish_command_not_found
 	printf "$argv[1] is not installed. Showing suggestions:\n"
 	if command -v fzf >/dev/null
-		fish -c "$pkginst ($cnf $argv[1] | fzf -0)"
+		fish -c "$pkginst ($cnf $argv[1] | fzf -0 --reverse --height=20% --min-height=7)"
 	else
 		fish -c "$cnf $argv[1]"
 		echo -e "\nfzf is missing on your system. To enable installing suggestions, install fzf"
