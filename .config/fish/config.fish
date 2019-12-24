@@ -151,10 +151,12 @@ set -x KERNEL (uname -sr)
 
 # Package manager
 if command -v pacman >/dev/null
-	set cnf "pacman -F"
+	set cnf "pacman -Fq"
+	set pkginst "sudo pacman -S"
 	set updatecmd "sudo pacman --noconfirm -Fy && sudo pacman --noconfirm -Syu"
     if command -v yay >/dev/null
-        set cnf "yay"
+        set cnf "yay -Fq"
+		set pkginst "yay -S"
         set updatecmd "yay --noconfirm -Fy && yay --noconfirm -Syu"
     end
 	if command -v pkgfile >/dev/null
@@ -163,15 +165,18 @@ if command -v pacman >/dev/null
 	end
 else if command -v zypper >/dev/null
 	set cnf "cnf"
+	set pkginst 'sudo zypper in'
 	set updatecmd 'sudo zypper dup -y'
 else if command -v dnf >/dev/null
 	set cnf "dnf provides"
+	set pkginst 'udo nf install'
 	set updatecmd 'sudo dnf -y upgrade --exclude=kernel\* && sudo dnf -y upgrade'
 else if command -v apt-get >/dev/null
 	set cnf "echo 'To see suggestions, install command-not-found and restart fish'"
 	if test -f /usr/lib/command-not-found
 		set cnf /usr/lib/command-not-found
 	end
+	set pkginst 'sudo apt-get install'
 	set updatecmd "sudo apt-get update && sudo apt-get -y upgrade"
 end
 
@@ -211,8 +216,12 @@ end
 
 function __fish_command_not_found_handler --on-event fish_command_not_found
 	printf "$argv[1] is not installed. Showing suggestions:\n"
-	fish -c "$cnf $argv[1]"
-	printf "\n$argv[1]: command not found\n"
+	if command -v fzf >/dev/null
+		fish -c "$pkginst ($cnf $argv[1] | fzf -0)"
+	else
+		fish -c "$cnf $argv[1]"
+		echo -e "\nfzf is missing on your system. To enable installing suggestions, install fzf"
+	end
 end
 
 if test -f ~/.post.fish
