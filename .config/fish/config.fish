@@ -116,6 +116,7 @@ abbr  hgco   'dotgit checkout'
 abbr  hgd    'dotgit diff'
 abbr  hgt    'dotgit log --graph --oneline --all'
 
+# Custom functions
 function cd
 	builtin cd $argv
 	if command -v exa >/dev/null
@@ -128,6 +129,16 @@ end
 function mcd
 	mkdir -p $argv
 	cd $argv
+end
+
+function src
+	if ! echo "$argv" | grep -q '.git$'
+		echo "This does not look like a git repository"
+		return
+	end
+	builtin cd ~/src
+	git clone "$argv"
+	cd (echo "$argv" | sed 's:.*/::' | sed 's:\.git$::')
 end
 
 # Network
