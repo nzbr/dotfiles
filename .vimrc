@@ -279,6 +279,9 @@ autocmd FileType * let b:comment=&commentstring[:-3] "Should be fine for most la
 	command! -nargs=0 Plantuml :Compile plantuml "%"
 	autocmd FileType plantuml autocmd BufWritePost <buffer> Plantuml
 
+"YAML
+	autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
+
 if has("unix")
 	if has("terminal")
 		call term_start(["sh","-c", "printf 'VimRC Loaded!' && sleep 1"], {"term_finish": "close", "term_rows": 1})
