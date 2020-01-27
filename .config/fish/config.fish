@@ -171,7 +171,7 @@ else if command -v zypper >/dev/null
 	set updatecmd 'sudo zypper dup -y'
 else if command -v dnf >/dev/null
 	set cnf "dnf provides"
-	set pkginst 'udo nf install'
+	set pkginst 'sudo dnf install'
 	set updatecmd 'sudo dnf -y upgrade --exclude=kernel\* && sudo dnf -y upgrade'
 else if command -v apt-get >/dev/null
 	set cnf "echo 'To see suggestions, install command-not-found and restart fish'"
