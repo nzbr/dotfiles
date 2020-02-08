@@ -58,23 +58,43 @@ abbr light 'kitty @ set-colors foreground=black background=white; kitty @ set-ba
 abbr dark  'kitty @ set-colors --reset; kitty @ set-background-opacity 0.8'
 abbr neo   'kitty @ set-colors foreground=green background=black; kitty @ set-background-opacity 1'
 
+# If in a vscode remote shell, open code instead of other editors
+if set -q AMD_ENTRYPOINT
+	abbr vim code
+	abbr vi code
+	abbr nano code
+else
+	abbr --erase vim
+	abbr --erase vi
+	abbr --erase nano
+end
+
 # use exa instead of ls
 if command -v exa >/dev/null
 	abbr ls 'exa'
 	abbr la 'exa -la --git'
 	abbr l 'exa -l --git'
+else
+	abbr --erase ls
+	abbr la "ls -la"
+	abbr l "ls -l"
 end
 
 # use colordiff
 if command -v colordiff >/dev/null
 	abbr gdiff (which diff)
 	abbr diff colordiff -u
+else
+	abbr --erase diff
 end
 
 # use bat instead of cat/less
 if command -v bat >/dev/null
 	abbr cat bat
 	abbr less bat
+else
+	abbr --erase cat
+	abbr --erase less
 end
 
 # QEMU
