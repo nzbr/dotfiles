@@ -64,9 +64,9 @@ if set -q AMD_ENTRYPOINT
 	abbr vi code
 	abbr nano code
 else
-	abbr --erase vim
-	abbr --erase vi
-	abbr --erase nano
+	abbr --erase vim ^/dev/null
+	abbr --erase vi ^/dev/null
+	abbr --erase nano ^/dev/null
 end
 
 # use exa instead of ls
@@ -75,7 +75,7 @@ if command -v exa >/dev/null
 	abbr la 'exa -la --git'
 	abbr l 'exa -l --git'
 else
-	abbr --erase ls
+	abbr --erase ls ^/dev/null
 	abbr la "ls -la"
 	abbr l "ls -l"
 end
@@ -85,7 +85,7 @@ if command -v colordiff >/dev/null
 	abbr gdiff (which diff)
 	abbr diff colordiff -u
 else
-	abbr --erase diff
+	abbr --erase diff ^/dev/null
 end
 
 # use bat instead of cat/less
@@ -93,8 +93,8 @@ if command -v bat >/dev/null
 	abbr cat bat
 	abbr less bat
 else
-	abbr --erase cat
-	abbr --erase less
+	abbr --erase cat ^/dev/null
+	abbr --erase less ^/dev/null
 end
 
 # QEMU
