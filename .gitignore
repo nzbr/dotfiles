@@ -1,6 +1,5 @@
 *
 
-
 !.Xresources
 !.abcde.conf
 !.config
@@ -15,6 +14,7 @@
 !.config/nvim/init.vim
 !.config/zathura
 !.config/zathura/zathurarc
+!.dotinstall.sh
 !.gitignore
 !.i3
 !.i3/_config
