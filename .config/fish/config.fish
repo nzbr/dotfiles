@@ -161,14 +161,6 @@ function src
 	cd (echo "$argv" | sed 's:.*/::' | sed 's:\.git$::')
 end
 
-# Network
-set -x IP4 (curl -m 1 -4s icanhazip.com ^/dev/null)
-set -x IP6 (curl -m 1 -6s icanhazip.com ^/dev/null)
-set -x HOST (host "$IP4" ^/dev/null | awk '{print $NF;}' | head -c -2)
-set -x HOST6 (host "$IP6" ^/dev/null | awk '{print $NF;}' | head -c -2)
-
-set -x KERNEL (uname -sr)
-
 # Package manager
 if command -v pacman >/dev/null
 	set cnf "pacman -Fq"
@@ -203,12 +195,6 @@ else if command -v apt-get >/dev/null
 end
 
 function fish_greeting
-	echo "     _____     ____"
-	echo "    /      \  |  o |"
-	echo "   |        |/ ___\| - Jeder bekommt eine Schildkröte!"
-	echo "   |_________/"
-	echo "   |_|_| |_|_|                       https://turtl.me/"
-	echo ""
 	if ! set -q SUDO_USER
 		if ! find $HOME -maxdepth 1 -name '.update' -mtime 0 | grep -q '.*'
 			touch $HOME/.update
@@ -224,15 +210,11 @@ function fish_greeting
 			exec fish # Restart
 		end
 		printf "\nWelcome to fish!\n================\n\n"
-		printf "User:\t$USER\n"
-		printf "Kernel:\t$KERNEL\n"
-		printf "WAN:\tIP4:\t$IP4\n\tIP6:\t$IP6\n\tHOST:\t$HOST\n\tHOST6:\t$HOST6\n"
+		printf "Kernel:\t"(uname -sr)"\n"
 		if command -v ip >/dev/null
 			printf "LAN:"
 			ip -o addr | awk '!/^[0-9]*: ?lo|link\/ether/ {print "\t"$2"!\t"$4}' | grep -v ':' | sed 's/!/:/;s@/.*$@@'
 		end
-		printf "Date:\t"
-		date
 	end
 end
 
