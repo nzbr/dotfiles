@@ -46,6 +46,7 @@ endif
 			Plug 'ollykel/v-vim'
 			Plug 'rhysd/vim-grammarous'
 			Plug 'scrooloose/nerdtree'
+			Plug 'tomasiser/vim-code-dark'
 			Plug 'tpope/vim-commentary'
 			Plug 'tpope/vim-eunuch'
 			Plug 'tpope/vim-fugitive'
@@ -54,6 +55,12 @@ endif
 			Plug 'vim-pandoc/vim-pandoc-syntax'
 			"if has("python3") | Plug 'anned20/vimsence' | endif
 	call plug#end()
+
+"Colors
+set t_Co=256
+set t_ut=
+colorscheme codedark
+let g:airline_theme = 'codedark'
 
 "Powerline/Lightline
 	set laststatus=2

@@ -196,6 +196,12 @@ end
 
 function fish_greeting
 	if ! set -q SUDO_USER
+		# Set Colors
+		if test -f ~/.consolecolors.sh
+			~/.consolecolors.sh
+		end
+
+		# Updates
 		if ! find $HOME -maxdepth 1 -name '.update' -mtime 0 | grep -q '.*'
 			touch $HOME/.update
 			fish -c "$updatecmd"
