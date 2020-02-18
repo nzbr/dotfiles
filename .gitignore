@@ -8,6 +8,7 @@
 !.config/compton.conf
 !.config/fish
 !.config/fish/config.fish
+!.config/kglobalshortcutsrc
 !.config/kitty
 !.config/kitty/kitty.conf
 !.config/nvim
