@@ -10,6 +10,7 @@
 !.config/fish/config.fish
 !.config/kitty
 !.config/kitty/kitty.conf
+!.config/kitty/theme.conf
 !.config/nvim
 !.config/nvim/init.vim
 !.config/zathura
