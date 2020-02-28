@@ -7,3 +7,4 @@ fi
 if command -v nvim >/dev/null; then
 	nvim -c "PlugUpdate | qa"
 fi
+touch ~/.update
