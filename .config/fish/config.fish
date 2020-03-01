@@ -48,6 +48,7 @@ abbr x 'xdg-open'
 abbr xc 'xsel -b'
 
 abbr re 'exec fish' # Restart fish
+abbr cre 'clear; exec fish'
 abbr temp 'pushd (mktemp -d)'
 abbr fupdate 'rm ~/.update; exec fish'
 abbr mkdir 'mkdir -p'
