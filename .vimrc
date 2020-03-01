@@ -269,7 +269,7 @@ autocmd FileType * let b:comment=&commentstring[:-3] "Should be fine for most la
 	command! -nargs=0 PandocCompile :Compile pdf.sh "%"
 	command! -nargs=0 PdfOpen :XdgOpen %:r.pdf
 	autocmd FileType pandoc set nofoldenable
-	autocmd FileType pandoc autocmd BufWritePost <buffer> PandocCompile
+	"autocmd FileType pandoc autocmd BufWritePost <buffer> PandocCompile
 
 "fish
 	autocmd FileType fish compiler fish
