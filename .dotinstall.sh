@@ -1,5 +1,5 @@
 #!/bin/bash
-cp -vr "$(dirname $0)" ~/.
+cp -vr "$(dirname $0)"/. ~/.
 mv -v ~/.git ~/.git-hidden
 if command -v vim >/dev/null; then
 	vim -c "PlugUpdate | qa"
