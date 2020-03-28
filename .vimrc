@@ -34,7 +34,7 @@ endif
 			Plug 'aquach/vim-http-client'
 			Plug 'dag/vim-fish'
 			Plug 'dhruvasagar/vim-table-mode'
-			Plug 'glacambre/firenvim'
+			"Plug 'glacambre/firenvim'
 			Plug 'godlygeek/tabular'
 			Plug 'itchyny/lightline.vim'
 			Plug 'jamessan/vim-gnupg'

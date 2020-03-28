@@ -39,7 +39,12 @@ set -x MAKEFLAGS -j(nproc) #Make make use all cores
 
 # Shortcuts
 abbr c 'code'
-abbr py 'python'
+if command -v ipython >/dev/null
+	abbr py 'ipython'
+else
+	abbr py 'python3'
+end
+abbr p2 'python2'
 abbr r 'ranger'
 abbr s 'sudo'
 abbr ssc 'sudo systemctl'
