@@ -141,12 +141,12 @@ abbr  hgt    'dotgit log --graph --oneline --all'
 
 # Subversion
 abbr s       'svn'
-abbr sco     'svn co'
+abbr scl     'svn co'
 abbr sa      'svn add'
 abbr sc      'svn commit'
-abbr st      'svn status'
-abbr sp      'svn update'
-abbr sl      'svn log | less'
+abbr sst     'svn status'
+abbr spl     'svn update'
+abbr st      'svn log | less'
 
 # Custom functions
 function cd
