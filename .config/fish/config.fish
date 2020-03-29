@@ -50,6 +50,7 @@ abbr xc 'xsel -b'
 abbr re 'exec fish' # Restart fish
 abbr cre 'clear; exec fish'
 abbr temp 'pushd (mktemp -d)'
+abbr tvim 'vim (mktemp)'
 abbr fupdate 'rm ~/.update; exec fish'
 abbr mkdir 'mkdir -p'
 abbr fork 'kitty &; disown'
@@ -104,6 +105,7 @@ abbr qemu-kvm $kvmcmd
 abbr kvm $kvmcmd
 
 # git abbrs
+abbr g       'git'
 abbr gcl     'git clone'
 abbr ga      'git add'
 abbr gaa     'git add --all'
@@ -136,6 +138,15 @@ abbr  hgsp   'dotgit stash pop'
 abbr  hgco   'dotgit checkout'
 abbr  hgd    'dotgit diff'
 abbr  hgt    'dotgit log --graph --oneline --all'
+
+# Subversion
+abbr s       'svn'
+abbr sco     'svn co'
+abbr sa      'svn add'
+abbr sc      'svn commit'
+abbr st      'svn status'
+abbr sp      'svn update'
+abbr sl      'svn log | less'
 
 # Custom functions
 function cd
