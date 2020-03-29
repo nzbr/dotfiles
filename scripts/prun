@@ -1,2 +1,2 @@
 #!/bin/bash
-sudo podman run --rm -it -v $PWD:/pwd --hostname podman "$@"
+podman run --rm -it -v $PWD:/pwd --workdir /pwd --hostname podman "$@"
