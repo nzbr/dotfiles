@@ -77,19 +77,16 @@ else
 	abbr --erase nano ^/dev/null
 end
 
-# use exa instead of ls
+# Replace ls
+abbr --erase ls ^/dev/null
+abbr la 'ls -la'
+abbr l 'ls -l'
 if command -v lsd >/dev/null
-	abbr ls 'lsd'
-	abbr la 'lsd -la'
-	abbr l 'lsd -l'
+	alias ls 'lsd'
 else if command -v exa >/dev/null
-	abbr ls 'exa'
-	abbr la 'exa -la --git'
-	abbr l 'exa -l --git'
+	alias ls 'exa --git'
 else
-	abbr --erase ls ^/dev/null
-	abbr la "ls -la"
-	abbr l "ls -l"
+	functions -e ls ^/dev/null
 end
 
 # use colordiff
@@ -160,13 +157,9 @@ abbr st      'svn log | less'
 
 # Custom functions
 function cd
-	builtin cd $argv
-	if command -v lsd >/dev/null
-		timeout -v 1 lsd
-	else if command -v exa >/dev/null
-		timeout -v 1 exa
-	else
-		timeout -v 1 ls
+	if builtin cd $argv
+		echo
+		timeout -v 1 fish -c ls
 	end
 end
 
@@ -245,6 +238,11 @@ function fish_greeting
 			printf "LAN:"
 			ip -o addr | awk '!/^[0-9]*: ?lo|link\/ether/ {print "\t"$2"!\t"$4}' | grep -v ':' | sed 's/!/:/;s@/.*$@@'
 		end
+
+		echo
+
+		# LS
+		timeout -v 1 fish -c ls
 	end
 end
 
