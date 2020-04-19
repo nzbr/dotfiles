@@ -59,6 +59,7 @@ abbr tvim 'vim (mktemp)'
 abbr fupdate 'rm ~/.update; exec fish'
 abbr mkdir 'mkdir -p'
 abbr fork 'kitty &; disown'
+abbr recode 'code . &; disown; exit'
 
 ## Colors
 abbr light 'kitty @ set-colors foreground=black background=white; kitty @ set-bacground-opacity 1'
@@ -77,7 +78,11 @@ else
 end
 
 # use exa instead of ls
-if command -v exa >/dev/null
+if command -v lsd >/dev/null
+	abbr ls 'lsd'
+	abbr la 'lsd -la'
+	abbr l 'lsd -l'
+else if command -v exa >/dev/null
 	abbr ls 'exa'
 	abbr la 'exa -la --git'
 	abbr l 'exa -l --git'
@@ -156,7 +161,9 @@ abbr st      'svn log | less'
 # Custom functions
 function cd
 	builtin cd $argv
-	if command -v exa >/dev/null
+	if command -v lsd >/dev/null
+		timeout -v 1 lsd
+	else if command -v exa >/dev/null
 		timeout -v 1 exa
 	else
 		timeout -v 1 ls
