@@ -52,6 +52,7 @@ abbr vi 'vim'
 abbr x 'xdg-open'
 abbr xc 'xsel -b'
 
+abbr :q 'exit'
 abbr re 'exec fish' # Restart fish
 abbr cre 'clear; exec fish'
 abbr temp 'pushd (mktemp -d)'
@@ -65,6 +66,11 @@ abbr recode 'code . &; disown; exit'
 abbr light 'kitty @ set-colors foreground=black background=white; kitty @ set-bacground-opacity 1'
 abbr dark  'kitty @ set-colors --reset; kitty @ set-background-opacity 0.8'
 abbr neo   'kitty @ set-colors foreground=green background=black; kitty @ set-background-opacity 1'
+
+# Spawn programs
+function spawn
+	$argv &>/dev/null &; disown
+end
 
 # If in a vscode remote shell, open code instead of other editors
 if set -q AMD_ENTRYPOINT
