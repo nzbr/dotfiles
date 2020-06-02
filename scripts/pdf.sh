@@ -24,16 +24,14 @@ if ! command -v pandocode >/dev/null; then
 fi
 
 # pandoc
-# texlive-full
+# texlive-most
 # pandoc-include-code (AUR)
-# pandoc-plantuml-filter-git (PIP3)
 
 if ! [ "${1%/*}" == "$1" ]; then
 	pushd "${1%/*}"
 fi
 pandoc \
 	--template $TEMPLATE \
-	--filter pandoc-plantuml \
 	--filter pandoc-include-code \
 	--filter pandocode \
 	-o "$(basename ${1%.*}.pdf)" \
