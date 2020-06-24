@@ -116,6 +116,8 @@ let g:airline_theme = 'codedark'
 	autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
 	set splitbelow splitright "Set default split directions
 	filetype plugin indent on
+	set modeline        "Enable modelines
+	set modelines=5
 
 "Spell-Check
 	autocmd FileType * setlocal nospell
