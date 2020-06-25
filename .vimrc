@@ -24,7 +24,9 @@ endif
 
 "Plugins
 	call plug#begin('~/.vim/bundle')
+			"Plug 'glacambre/firenvim'
 			"Plug 'neoclide/coc.nvim', {'tag': '*', 'do': { -> coc#util#install()}}
+			"if has("python3") | Plug 'anned20/vimsence' | endif
 			Plug 'Chiel92/vim-autoformat'
 			Plug 'LnL7/vim-nix'
 			Plug 'PotatoesMaster/i3-vim-syntax'
@@ -32,9 +34,9 @@ endif
 			Plug 'airblade/vim-gitgutter'
 			Plug 'aklt/plantuml-syntax'
 			Plug 'aquach/vim-http-client'
+			Plug 'cespare/vim-toml'
 			Plug 'dag/vim-fish'
 			Plug 'dhruvasagar/vim-table-mode'
-			"Plug 'glacambre/firenvim'
 			Plug 'godlygeek/tabular'
 			Plug 'itchyny/lightline.vim'
 			Plug 'jamessan/vim-gnupg'
@@ -53,7 +55,6 @@ endif
 			Plug 'tpope/vim-surround'
 			Plug 'vim-pandoc/vim-pandoc'
 			Plug 'vim-pandoc/vim-pandoc-syntax'
-			"if has("python3") | Plug 'anned20/vimsence' | endif
 	call plug#end()
 
 "Colors
