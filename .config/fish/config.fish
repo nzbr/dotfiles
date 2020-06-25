@@ -112,6 +112,13 @@ else
 	abbr --erase less ^/dev/null
 end
 
+# use lsusb.py
+if command -v lsusb.py >/dev/null
+	abbr lsusb lsusb.py
+else
+	abbr --erase lsusb.py
+end
+
 # QEMU
 set kvmcmd 'qemu-system-x86_64 --enable-kvm'
 abbr qemu-kvm $kvmcmd
@@ -200,6 +207,7 @@ if command -v pacman >/dev/null
 	else
 		set cnf "echo -e 'Install pkgfile for faster suggestions\n' >&2; $cnf"
 	end
+	set cnf "fish -c \"$pkginst ($cnf \$argv[1] | fzf -0 --reverse --height=20% --min-height=7)\""
 else if command -v zypper >/dev/null
 	set cnf "cnf"
 	set pkginst 'sudo zypper in'
@@ -255,7 +263,7 @@ end
 function __fish_command_not_found_handler --on-event fish_command_not_found
 	printf "$argv[1] is not installed. Showing suggestions:\n"
 	if command -v fzf >/dev/null
-		fish -c "$pkginst ($cnf $argv[1] | fzf -0 --reverse --height=20% --min-height=7)"
+		eval $cnf $argv[1]
 	else
 		fish -c "$cnf $argv[1]"
 		echo -e "\nfzf is missing on your system. To enable installing suggestions, install fzf"
