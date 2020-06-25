@@ -118,6 +118,7 @@ let g:airline_theme = 'codedark'
 	filetype plugin indent on
 	set modeline        "Enable modelines
 	set modelines=5
+	set backspace=indent,eol,start " Make backspace work everywhere
 
 "Spell-Check
 	autocmd FileType * setlocal nospell
