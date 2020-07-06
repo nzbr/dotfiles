@@ -41,4 +41,4 @@ if isdocked.sh; then
 fi
 
 echo "Starting KDE"
-exec startkde "$@"
+exec startplasma-x11 "$@"
