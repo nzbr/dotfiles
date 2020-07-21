@@ -222,7 +222,7 @@ function install {
 	git clone "$repourl" ~/.dotfiles
 	cd ~/.dotfiles
 	git submodule update --init --recursive
-	touch .update
+	touch ~/.update
 	echo -e "$OK Download successful"
 
 	autolink_all

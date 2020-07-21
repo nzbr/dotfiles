@@ -25,16 +25,13 @@ export DESKTOP_SESSION=kde
 export KDEWM=$(which i3)
 
 echo "Setting theme"
-#wal -R
-#echo "Setting theme - alacritty"
-#$HOME/scripts/alacritty-wal.py
 
 # echo "Starting killksplash.sh"
-# timeout 300s /home/nzbr/scripts/killksplash.sh &
+# timeout 300s $HOME/.local/bin/killksplash.sh &
 
 echo "Pre-Processing i3 config"
 i3bang $HOME/.i3/_config
-sh $HOME/scripts/i3-setmonitors.sh $HOME/.i3/config
+sh $HOME/.local/bin/i3-setmonitors.sh $HOME/.i3/config
 
 if isdocked.sh; then
 	barrier &

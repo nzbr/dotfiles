@@ -49,7 +49,7 @@ font pango:Droid Sans 11
 # Xresources
 exec --no-startup-id xrdb ~/.Xresources
 exec --no-startup-id setxkbmap de
-exec --no-startup-id ~/scripts/alternating_layouts/alternating_layouts.py
+exec --no-startup-id ~/.local/bin/alternating_layouts.py
 exec --no-startup-id nitrogen --restore --force-setter=xinerama
 
 ##KDE
@@ -60,7 +60,7 @@ exec --no-startup-id nitrogen --restore --force-setter=xinerama
 # |_|\_\____/|_____|
 
 # KWin
-bindsym $mod+Shift+Control+k --release exec --no-startup-id bash ~/scripts/changewm.sh
+bindsym $mod+Shift+Control+k --release exec --no-startup-id bash ~/.local/bin/changewm.sh
 
 # Try to kill the wallpaper set by Plasma (it takes up the entire workspace and hides everythiing)
 # The window title has to be translated to the current system loacle
