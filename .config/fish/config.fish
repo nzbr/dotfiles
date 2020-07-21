@@ -7,10 +7,10 @@ cp -v control.sh "$temp"
 set files (dotgit ls-tree --full-tree --name-only -r HEAD)
 rm -vrf $files
 for file in $files
-	rmdir (dirname $file)
+	rmdir -vp (dirname $file)
 end
 rm -rf .git-hidden
 
-bash "$temp"
+bash "$temp" --force
 exec fish
 

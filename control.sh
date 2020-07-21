@@ -226,9 +226,6 @@ function install {
 }
 
 # Do nothing if sourced
-if [ "$sourced" == "false" ]; then
-	echo "INSTALLING DOTFILES"
+if [ "$sourced" == "false" ] || [ "${1-}" == "--force" ]; then
 	install
-else
-	echo "DOING NOTHING"
 fi
