@@ -80,17 +80,23 @@ function search_stow {
 	fi
 }
 
+function dolink {
+	pushd ~/.dotfiles >/dev/null
+	$stow "$@"
+	popd >/dev/null
+}
+
 function link {
 	search_stow
 	echo -e "$INFO Linking $1"
-	$stow "$1"
+	dolink "$1"
 }
 export -f link
 
 function unlink {
 	search_stow
 	echo -e "$INFO Unlinking $1"
-	$stow -D "$1"
+	dolink -D "$1"
 }
 export -f unlink
 
@@ -226,6 +232,8 @@ function install {
 }
 
 # Do nothing if sourced
-if [ "$sourced" == "false" ] || [ "${1-}" == "--force" ]; then
-	install
+if [ -z ${DOT_NOINSTALL-} ]; then
+	if [ "$sourced" == "false" ] || [ "${1-}" == "--force" ]; then
+		install
+	fi
 fi
