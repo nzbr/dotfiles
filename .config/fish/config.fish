@@ -128,6 +128,16 @@ set kvmcmd 'qemu-system-x86_64 --enable-kvm'
 abbr qemu-kvm $kvmcmd
 abbr kvm $kvmcmd
 
+# Make git work for dotfiles
+alias dotgit 'command git --git-dir=$HOME/.git-hidden --work-tree=$HOME'
+function git
+	if test -d ".git-hidden"
+		dotgit $argv
+	else
+		command git $argv
+	end
+end
+
 # git abbrs
 abbr g       'git'
 abbr gcl     'git clone'
@@ -144,24 +154,6 @@ abbr gsp     'git stash pop'
 abbr gco     'git checkout'
 abbr gd      'git diff'
 abbr gt      'git log --graph --oneline --all'
-
-# git abbrs for dotfiles
-alias dotgit 'git --git-dir=$HOME/.git-hidden --work-tree=$HOME'
-abbr  hg     'dotgit'
-abbr  hgcl   'dotgit clone'
-abbr  hga    'dotgit add'
-abbr  hgaa   'dotgit add --all'
-abbr  hgc    'dotgit commit -v'
-abbr  hgf    'dotgit fetch'
-abbr  hgs    'dotgit fetch; dotgit status'
-abbr  hgpl   'dotgit pull'
-abbr  hgps   'dotgit push'
-abbr  hgr    'dotgit reset'
-abbr  hgst   'dotgit stash'
-abbr  hgsp   'dotgit stash pop'
-abbr  hgco   'dotgit checkout'
-abbr  hgd    'dotgit diff'
-abbr  hgt    'dotgit log --graph --oneline --all'
 
 # Subversion
 abbr s       'svn'
