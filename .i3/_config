@@ -49,7 +49,8 @@ font pango:Droid Sans 11
 # Xresources
 exec --no-startup-id xrdb ~/.Xresources
 exec --no-startup-id setxkbmap de
-exec --no-startup-id ~/scripts/alternating_layouts.py
+exec --no-startup-id ~/scripts/alternating_layouts/alternating_layouts.py
+exec --no-startup-id nitrogen --restore --force-setter=xinerama
 
 ##KDE
 #  _  ______  _____
@@ -80,6 +81,9 @@ for_window [class="Plasmoidviewer"] floating enable, border none
 # KSplashQML
 for_window [class="ksplashqml"] floating enable, border none, move position center
 
+# Make Start-Menu work with meta-key
+# bindsym $mod --release exec --no-startup-id xdotool key Alt+F1
+
 
 ##WINDOWRULES
 # __        ___           _                 ____        _
@@ -96,6 +100,7 @@ for_window [class="anbox"] floating enable, border none
 for_window [class="qterminal"] floating enable, border normal, resize set width 720, resize set height 480
 for_window [class="[Qq]alculate-gtk"] floating enable, border normal
 for_window [class="jetbrains-toolbox"] floating enable, border normal
+for_window [class="yakuake"] floating enable, border none
 
 # The Anchor Docking Design package is needed to make this work
 for_window [class="[Ll]azarus" title="^(?!Lazarus-IDE).*"] floating enable, border normal
