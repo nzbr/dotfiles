@@ -218,8 +218,6 @@ function install {
 		repourl="https://github.com/nzbr/dotfiles.git"
 		echo -e "$INFO Downloading via HTTPS"
 	fi
-	# TODO: DEBUG
-	repourl="/pwd/.git"
 
 	git clone "$repourl" ~/.dotfiles
 	cd ~/.dotfiles
