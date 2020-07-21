@@ -34,7 +34,7 @@ source $HOME/.fish-powerline
 
 # export shell variables
 set -x EDITOR vim
-set -x PATH $PATH ~/scripts ~/.local/bin
+set -x PATH $PATH ~/scripts ~/.local/bin /var/lib/flatpak/exports/bin
 set -x MAKEFLAGS -j(nproc) #Make make use all cores
 
 # Shortcuts
@@ -61,6 +61,10 @@ abbr fupdate 'rm ~/.update; exec fish'
 abbr mkdir 'mkdir -p'
 abbr fork 'kitty &; disown'
 abbr recode 'code . &; disown; exit'
+
+# Kitty
+
+abbr title 'kitty @set-window-title'
 
 ## Colors
 abbr light 'kitty @ set-colors foreground=black background=white; kitty @ set-bacground-opacity 1'
