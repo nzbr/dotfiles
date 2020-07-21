@@ -129,14 +129,14 @@ abbr qemu-kvm $kvmcmd
 abbr kvm $kvmcmd
 
 # Make git work for dotfiles
-alias dotgit 'command git --git-dir=$HOME/.git-hidden --work-tree=$HOME'
-function git
-	if test -d ".git-hidden"
-		dotgit $argv
-	else
-		command git $argv
-	end
-end
+#alias dotgit 'command git --git-dir=$HOME/.git-hidden --work-tree=$HOME'
+#function git
+	#if test -d ".git-hidden"
+		#dotgit $argv
+	#else
+		#command git $argv
+	#end
+#end
 
 # git abbrs
 abbr g       'git'
