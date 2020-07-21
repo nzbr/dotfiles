@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+source ~/.dotfiles/control.sh
+link "$1"
