@@ -1,3 +1,9 @@
 #!/bin/bash
 if ! systemctl status docker>/dev/null; then systemctl start docker.socket; fi
-docker run --rm -it -v "$PWD:/pwd" --workdir /pwd --hostname docker "$@"
+docker run --rm -it \
+    -v "$PWD:/pwd" \
+    -v "/var/cache/pacman/pkg:/var/cache/pacman/pkg" \
+    -v "/var/cache/apt/archives:/var/cache/apt/archives" \
+    --workdir /pwd \
+    --hostname docker \
+    "$@"
