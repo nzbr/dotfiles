@@ -123,7 +123,6 @@ function autolink_all {
 	chk_cmd plasmashell
 	chk_cmd podman
 	chk_cmd python3
-	chk_cmd ssh
 	chk_cmd vim
 	chk_cmd zathura
 	chk_cmd zsh
@@ -137,7 +136,7 @@ function autolink_all {
 		unlink docker
 	fi
 	autolink fish
-	if is_present i3; then
+	if is_present i3 && is_present plasmashell; then
 		if is_present python3; then
 			ensurepip
 			$pip install --user i3ipc
@@ -152,6 +151,7 @@ function autolink_all {
 	else
 		unlink vim
 	fi
+	autolink picom
 	autolink zathura
 	autolink zsh
 
