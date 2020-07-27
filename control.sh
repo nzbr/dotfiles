@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
-if [[ $_ == $0 ]]; then
-	sourced=false
-else
-	sourced=true
-fi
+
 # CONSTANTS
 
 export TICK="[\e[1;32m✓\e[0m]"
@@ -211,7 +207,7 @@ function install {
 	cd "$(mktemp -d)"
 
 	# Is there a valid ssh key -> clone from nzbr.de with ssh
-	if is_present ssh && [ -f "$HOME/.ssh/id_ed25519.pub" ] && $downloadcmd https://github.com/nzbr.keys | grep -q "$(cat ~/.ssh/id_ed25519.pub | awk '{print $1" "$2;}')"; then
+	if is_present ssh && [ -f "$HOME/.ssh/id_ed25519.pub" ] && $downloadcmd https://github.com/nzbr.keys | grep -q "$(awk '{print $1" "$2;}' < ~/.ssh/id_ed25519.pub)"; then
 		repourl="git@github.com:nzbr/dotfiles.git"
 		echo -e "$INFO Downloading via SSH"
 	else
@@ -230,8 +226,6 @@ function install {
 }
 
 # Do nothing if sourced
-if [ -z ${DOT_NOINSTALL-} ]; then
-	if [ "$sourced" == "false" ] || [ "${1-}" == "--force" ]; then
-		install
-	fi
+if [ -z "${DOT_NOINSTALL-}" ]; then
+	install
 fi
