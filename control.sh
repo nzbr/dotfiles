@@ -1,5 +1,17 @@
 #!/usr/bin/env bash
 
+# nzbr's dotfiles
+# https://github.com/nzbr/dotfiles
+# ---------------------------------------------------------------------
+# Copyright © 2020 nzbr
+# This software is licensed under the ISC License.
+# For more information see the LICENSE file included in this repository
+# ---------------------------------------------------------------------
+#
+# This script is used to install and manage my dotfiles
+# Install: curl -sL go.nzbr.de/dotfiles | bash
+#
+
 # CONSTANTS
 
 export TICK="[\e[1;32m✓\e[0m]"
