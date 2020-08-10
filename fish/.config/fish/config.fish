@@ -231,15 +231,12 @@ function fish_greeting
 		# Updates
 		if ! find $HOME -maxdepth 1 -name '.update' -mtime 0 | grep -q '.*'
 			touch $HOME/.update
-			fish -c "$updatecmd"
+			# fish -c "$updatecmd"
 			printf "\n\nUpdating dotfiles\n"
-			dotgit pull
-			printf "\n\nUpdating VIM plugins\n"
-			if command -v vim >/dev/null
-				vim -c "PlugUpdate | qa"
-			else if command -v nvim >/dev/null
-				nvim -c "PlugUpdate | qa"
-			end
+			set prev $PWD
+			builtin cd ~/.dotfiles
+			git pull || true
+			builtin cd $prev
 			exec fish # Restart
 		end
 		printf "\nWelcome to fish!\n================\n\n"
