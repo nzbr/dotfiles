@@ -42,7 +42,7 @@ font pango:Droid Sans 11
 ##AUTOSTART
 #     _         _            _             _
 #    / \  _   _| |_ ___  ___| |_ __ _ _ __| |_
-   / _ \| | | | __/ _ \/ __| __/ _` | '__| __|
+#   / _ \| | | | __/ _ \/ __| __/ _` | '__| __|
 #  / ___ \ |_| | || (_) \__ \ || (_| | |  | |_
 # /_/   \_\__,_|\__\___/|___/\__\__,_|_|   \__|
 
@@ -85,8 +85,7 @@ for_window [class="ksplashqml"] floating enable, border none, move position cent
 for_window [class="plasmashell" window_type="notification"] floating enable, border none, move position 1260px 40px
 
 # Make Start-Menu work with meta-key
-# bindsym $mod --release exec --no-startup-id xdotool key Alt+F1
-
+exec --no-startup-id ksuperkey
 
 ##WINDOWRULES
 # __        ___           _                 ____        _
