@@ -34,7 +34,7 @@ source $HOME/.fish-powerline
 
 # export shell variables
 set -x EDITOR vim
-set -x PATH $PATH ~/scripts ~/.local/bin /var/lib/flatpak/exports/bin
+set -x PATH $PATH ~/scripts ~/.local/bin ~/.yarn/bin /var/lib/flatpak/exports/bin
 set -x MAKEFLAGS -j(nproc) #Make make use all cores
 
 # Shortcuts
