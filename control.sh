@@ -3,7 +3,7 @@
 # nzbr's dotfiles
 # https://github.com/nzbr/dotfiles
 # ---------------------------------------------------------------------
-# Copyright © 2020 nzbr
+# Copyright (c) 2020 nzbr
 # This software is licensed under the ISC License.
 # For more information see the LICENSE file included in this repository
 # ---------------------------------------------------------------------
@@ -132,6 +132,7 @@ function autolink_all {
 	chk_cmd podman
 	chk_cmd python3
 	chk_cmd vim
+	chk_cmd xfce-session
 	chk_cmd zathura
 	chk_cmd zsh
 
@@ -160,6 +161,7 @@ function autolink_all {
 		unlink vim
 	fi
 	autolink picom
+	autolink xfce
 	autolink zathura
 	autolink zsh
 
