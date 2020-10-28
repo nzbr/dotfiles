@@ -60,7 +60,7 @@ exec --no-startup-id nitrogen --restore --force-setter=xinerama
 # |_|\_\____/|_____|
 
 # KWin
-bindsym $mod+Shift+Control+k --release exec --no-startup-id bash ~/.local/bin/changewm.sh
+# bindsym $mod+Shift+Control+k --release exec --no-startup-id bash ~/.local/bin/changewm.sh
 
 # Try to kill the wallpaper set by Plasma (it takes up the entire workspace and hides everythiing)
 # The window title has to be translated to the current system loacle
@@ -85,7 +85,7 @@ for_window [class="ksplashqml"] floating enable, border none, move position cent
 for_window [class="plasmashell" window_type="notification"] floating enable, border none, move position 1260px 40px
 
 # Make Start-Menu work with meta-key
-exec --no-startup-id ksuperkey
+# exec --no-startup-id ksuperkey
 
 ##WINDOWRULES
 # __        ___           _                 ____        _
@@ -123,6 +123,9 @@ for_window [class="[Ll]azarus" title="^(?!Lazarus-IDE).*"] floating enable, bord
 bindsym $mod+Shift+!!<c,r> exec --no-startup-id i3bang; exec --no-startup-id sh i3-setmonitors.sh; !!<reload,restart>
 bindsym $mod+Shift+q kill
 bindsym $mod+Control+k --release exec --no-startup-id xkill
+
+# rofi
+bindsym --release $mod+d exec rofi.sh
 
 # Workspace switching
 #    <n>: Workspace number

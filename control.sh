@@ -131,6 +131,7 @@ function autolink_all {
 	chk_cmd plasmashell
 	chk_cmd podman
 	chk_cmd python3
+	chk_cmd rofi
 	chk_cmd vim
 	chk_cmd xfce-session
 	chk_cmd zathura
@@ -161,7 +162,8 @@ function autolink_all {
 		unlink vim
 	fi
 	autolink picom
-	autolink xfce
+	autolink rofi
+	autolink xfce-session
 	autolink zathura
 	autolink zsh
 
