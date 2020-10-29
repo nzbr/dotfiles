@@ -84,9 +84,6 @@ for_window [class="ksplashqml"] floating enable, border none, move position cent
 # Fix notfications (1600x900 only for now)
 for_window [class="plasmashell" window_type="notification"] floating enable, border none, move position 1260px 40px
 
-# Make Start-Menu work with meta-key
-# exec --no-startup-id ksuperkey
-
 ##WINDOWRULES
 # __        ___           _                 ____        _
 # \ \      / (_)_ __   __| | _____      __ |  _ \ _   _| | ___  ___
@@ -126,6 +123,10 @@ bindsym $mod+Control+k --release exec --no-startup-id xkill
 
 # rofi
 bindsym --release $mod+d exec rofi.sh
+bindsym --release Mod1+space exec rofi.sh
+
+# Make Start-Menu work with meta-key
+# exec --no-startup-id ksuperkey -e 'Super_L=Super_L|D'
 
 # Workspace switching
 #    <n>: Workspace number

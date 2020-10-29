@@ -133,7 +133,7 @@ function autolink_all {
 	chk_cmd python3
 	chk_cmd rofi
 	chk_cmd vim
-	chk_cmd xfce-session
+	chk_cmd xfce4-session
 	chk_cmd zathura
 	chk_cmd zsh
 
@@ -163,7 +163,7 @@ function autolink_all {
 	fi
 	autolink picom
 	autolink rofi
-	autolink xfce-session
+	autolink xfce4-session
 	autolink zathura
 	autolink zsh
 
