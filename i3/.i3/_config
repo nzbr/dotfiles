@@ -36,7 +36,7 @@ set $monSecondary replace-secondary
 workspace !!<1!1..10> output $monPrimary
 workspace E!!<1!1..10> output $monSecondary
 
-font pango:Droid Sans 11
+font pango:Product Sans 11
 
 
 ##AUTOSTART
@@ -92,7 +92,6 @@ for_window [class="plasmashell" window_type="notification"] floating enable, bor
 #    \_/\_/  |_|_| |_|\__,_|\___/ \_/\_/   |_| \_\\__,_|_|\___||___/
 
 # Floating windows
-for_window [class="Pamac-manager"] floating enable, border normal
 for_window [class="[Qq]emu-.*"] floating enable, border normal
 for_window [class="[Bb]lueman-manager"] floating enable, border normal
 for_window [class="anbox"] floating enable, border none
@@ -122,8 +121,7 @@ bindsym $mod+Shift+q kill
 bindsym $mod+Control+k --release exec --no-startup-id xkill
 
 # rofi
-bindsym --release $mod+d exec rofi.sh
-bindsym --release Mod1+space exec rofi.sh
+bindsym !!<$mod+d,Mod1+space> --release exec rofi -show
 
 # Make Start-Menu work with meta-key
 # exec --no-startup-id ksuperkey -e 'Super_L=Super_L|D'
@@ -210,7 +208,7 @@ bindsym $mod!!<,+Shift,+Control+Shift>+x exec !!<qutebrowser,firefox-developer-e
 bindsym $mod+Shift+Return exec $filemanager
 
 # dmenu
-bindsym $mod+d exec --no-startup-id i3-dmenu-desktop
+# bindsym $mod+d exec --no-startup-id i3-dmenu-desktop
 
 # Qalculate!
 bindsym $mod+Control+Q --release exec qalculate-gtk
