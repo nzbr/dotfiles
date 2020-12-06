@@ -202,7 +202,8 @@ bindsym $mod+Return --release exec $terminal
 bindsym $mod+T --release exec qterminal
 
 # Browser
-bindsym $mod!!<,+Shift,+Control+Shift>+x exec !!<qutebrowser,firefox-developer-edition,tor-browser>
+bindsym $mod+Control+Shift+x exec tor-browser
+bindsym $mod+Shift+!!<x,y> exec vivaldi-stable --profile-directory=!!<private,work>
 
 # File Manager
 bindsym $mod+Shift+Return exec $filemanager
