@@ -145,8 +145,9 @@ function autolink_all {
 	else
 		unlink docker
 	fi
+	link dot-control # Always link control scripts
 	autolink fish
-	if is_present i3 && is_present plasmashell; then
+	if is_present i3; then
 		if is_present python3; then
 			ensurepip
 			$pip install --user i3ipc
@@ -163,6 +164,7 @@ function autolink_all {
 	fi
 	autolink picom
 	autolink rofi
+	link scripts # Always link scripts
 	autolink xfce4-session
 	autolink zathura
 	autolink zsh
