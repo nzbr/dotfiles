@@ -1,5 +1,5 @@
 # dotfiles
-My dotfiles for i3gaps+plasma, vim, fish and some others
+My dotfiles for i3gaps+plasma, vim, zsh and some others
 
 
 ### Installation  
