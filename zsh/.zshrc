@@ -158,7 +158,7 @@ alias mkdir="mkdir -p"
 alias py="python3"
 alias re="exec zsh"
 alias start=xdg-open
-alias temp="pushd (mktemp -d)"
+alias temp="pushd $(mktemp -d)"
 alias vi=vim
 iscmd "ipython" && alias py="ipython"
 
