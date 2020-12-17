@@ -22,7 +22,11 @@
             // Put settings here that you want to apply to all profiles.
             "colorScheme": "VSCode Dark",
             "useAcrylic": true,
-            "acrylicOpacity": 0.7
+            "acrylicOpacity": 0.7,
+            "fontFace": "JetBrainsMono Nerd Font",
+            "fontSize": 10,
+            "cursorShape": "filledBox",
+            "cursorColor": "#00ff00"
         },
         "list": [
             {
