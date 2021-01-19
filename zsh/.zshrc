@@ -132,6 +132,12 @@ else
 	local symbol='$'
 fi
 
+if [ -n "$SSH_CONNECTION" ]; then
+	local host="%{$fg[red]%}@%m%{$reset_color%}"
+else
+	local host=""
+fi
+
 function build_prompt {
 	if [ -n "$WSL_DISTRO_NAME" ]; then
 		if [ "${PWD##/drv/}" != "${PWD}" ]; then
@@ -140,10 +146,11 @@ function build_prompt {
 			return 0
 		fi
 	fi
-	print "${user}:%{$fg[blue]%}%~%{$reset_color%}$(git_prompt_info)${symbol} "
+	print "${user}${host}:%{$fg[blue]%}%~%{$reset_color%}$(git_prompt_info)${symbol} "
 }
 
 PROMPT='$(build_prompt)'
+
 # ALIASES
 alias :q=exit
 alias cls="clear"
