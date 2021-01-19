@@ -58,12 +58,6 @@ path "$HOME/.yarn/bin"
 path "$HOME/scripts"
 iscmd go && path "$(go env GOPATH)/bin"
 
-# Install thefuck if it isn't
-iscmd thefuck || {
-	echo -e "$INFO Installing thefuck"
-	iscmd pip && pip install --user thefuck
-}
-
 # Load antibody
 ZSH_DISABLE_COMPFIX=true
 ANTIBODY_DIR="$HOME/.cache/antibody"
