@@ -138,6 +138,22 @@ else
 	local host=""
 fi
 
+local bedrock=""
+if [ -f '/bedrock/bin/brl' ]; then
+	local stratum="$(/bedrock/bin/brl which /)"
+	local initstratum="$(/bedrock/bin/brl deref init)"
+	local bedrock="%{$fg[cyan]%}$stratum%{$reset_color%}:"
+	if echo "$PATH" | grep -q '/bedrock/cross/bin'; then
+		if [ "$stratum" = "$initstratum" ]; then
+			local bedrock=""
+		fi
+	else
+		local bedrock="%{$fg[red]%}$stratum!%{$reset_color%}:"
+	fi
+else
+	local isbedrock=false
+fi
+
 function build_prompt {
 	if [ -n "$WSL_DISTRO_NAME" ]; then
 		if [ "${PWD##/drv/}" != "${PWD}" ]; then
@@ -146,7 +162,7 @@ function build_prompt {
 			return 0
 		fi
 	fi
-	print "${user}${host}:%{$fg[blue]%}%~%{$reset_color%}$(git_prompt_info)${symbol} "
+	print "${user}${host}:${bedrock}%{$fg[blue]%}%~%{$reset_color%}$(git_prompt_info)${symbol} "
 }
 
 PROMPT='$(build_prompt)'
