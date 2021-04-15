@@ -259,6 +259,15 @@ function mcd {
 	cd "$1"
 }
 
+# Change stratum (for bedrock)
+function cs {
+	exec strat "$1" zsh
+}
+function csr {
+	# Don't exec because the restrictions can't be removed by calling strat
+	strat -r "$1" zsh
+}
+
 # Load .post.zsh if it exists
 if [ -f ~/.post.zsh ]; then
 	source ~/.post.zsh
