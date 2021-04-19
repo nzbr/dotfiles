@@ -268,6 +268,19 @@ function csr {
 	strat -r "$1" zsh
 }
 
+# Automatic sudo
+function _autosudo {
+	iscmd $1 && alias $1="sudo $1"
+}
+_autosudo zypper
+_autosudo pacman
+_autosudo apt
+_autosudo apt-get
+_autosudo dnf
+_autosudo yast2
+_autosudo systemctl
+_autosudo journalctl
+
 # Load .post.zsh if it exists
 if [ -f ~/.post.zsh ]; then
 	source ~/.post.zsh
