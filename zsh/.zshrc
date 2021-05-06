@@ -138,6 +138,22 @@ else
 	local host=""
 fi
 
+local bedrock=""
+if [ -f '/bedrock/bin/brl' ]; then
+	local stratum="$(/bedrock/bin/brl which /)"
+	local initstratum="$(/bedrock/bin/brl deref init)"
+	local bedrock="%{$fg[cyan]%}$stratum%{$reset_color%}:"
+	if echo "$PATH" | grep -q '/bedrock/cross/bin'; then
+		if [ "$stratum" = "$initstratum" ]; then
+			local bedrock=""
+		fi
+	else
+		local bedrock="%{$fg[red]%}$stratum!%{$reset_color%}:"
+	fi
+else
+	local isbedrock=false
+fi
+
 function build_prompt {
 	if [ -n "$WSL_DISTRO_NAME" ]; then
 		if [ "${PWD##/drv/}" != "${PWD}" ]; then
@@ -146,7 +162,7 @@ function build_prompt {
 			return 0
 		fi
 	fi
-	print "${user}${host}:%{$fg[blue]%}%~%{$reset_color%}$(git_prompt_info)${symbol} "
+	print "${user}${host}:${bedrock}%{$fg[blue]%}%~%{$reset_color%}$(git_prompt_info)${symbol} "
 }
 
 PROMPT='$(build_prompt)'
@@ -242,6 +258,28 @@ function mcd {
 	mkdir -p "$1"
 	cd "$1"
 }
+
+# Change stratum (for bedrock)
+function cs {
+	exec strat "$1" zsh
+}
+function csr {
+	# Don't exec because the restrictions can't be removed by calling strat
+	strat -r "$1" zsh
+}
+
+# Automatic sudo
+function _autosudo {
+	iscmd $1 && alias $1="sudo $1"
+}
+_autosudo zypper
+_autosudo pacman
+_autosudo apt
+_autosudo apt-get
+_autosudo dnf
+_autosudo yast2
+_autosudo systemctl
+_autosudo journalctl
 
 # Load .post.zsh if it exists
 if [ -f ~/.post.zsh ]; then
