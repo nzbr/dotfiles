@@ -133,7 +133,7 @@ else
 fi
 
 if [ -n "$SSH_CONNECTION" ]; then
-	local host="%{$fg[red]%}@%m%{$reset_color%}"
+	local host="@%m"
 else
 	local host=""
 fi
