@@ -125,15 +125,17 @@ ZSH_THEME_GIT_PROMPT_DIRTY=" %{$reset_color%}%{$fg_bold[yellow]%}*%{$reset_color
 ZSH_THEME_GIT_PROMPT_CLEAN=""
 
 if [[ $UID -eq 0 ]]; then
+	local usercolor="%{$fg[red]%}"
 	local user="%{$fg[red]%}%n%{$reset_color%}"
 	local symbol='#'
 else
+	local usercolor="%{$fg[green]%}"
 	local user="%{$fg[green]%}%n%{$reset_color%}"
 	local symbol='$'
 fi
 
 if [ -n "$SSH_CONNECTION" ]; then
-	local host="@%m"
+	local host="${usercolor}@%m%{$reset_color%}"
 else
 	local host=""
 fi
