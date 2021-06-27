@@ -119,8 +119,8 @@ AUTO_LS_NEWLINE=false
 
 # PROMPT
 
-ZSH_THEME_GIT_PROMPT_PREFIX=" %{$fg[cyan]%}["
-ZSH_THEME_GIT_PROMPT_SUFFIX="%{$fg[cyan]%}]%{$reset_color%} "
+ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg[cyan]%}["
+ZSH_THEME_GIT_PROMPT_SUFFIX="%{$fg[cyan]%}]%{$reset_color%}"
 ZSH_THEME_GIT_PROMPT_DIRTY=" %{$reset_color%}%{$fg_bold[yellow]%}*%{$reset_color%}"
 ZSH_THEME_GIT_PROMPT_CLEAN=""
 
@@ -157,17 +157,27 @@ else
 fi
 
 function build_prompt {
-	if [ -n "$WSL_DISTRO_NAME" ]; then
-		if [ "${PWD##/drv/}" != "${PWD}" ]; then
-			dir=$(pwd | sed -E 's|/drv/(.)|\U\1:|;s|/|\\\\|g;s|:$|:\\\\|')
-			print "ZSH ${dir}$(git_prompt_info)> "
-			return 0
-		fi
+	if [ "${PWD##/drv/}" != "${PWD}" ]; then
+		dir=$(pwd | sed -E 's|/drv/(.)|\U\1:|;s|/|\\\\|g;s|:$|:\\\\|')
+		print "ZSH ${dir}> "
+		return 0
 	fi
-	print "${user}${host}:${bedrock}%{$fg[blue]%}%~%{$reset_color%}$(git_prompt_info)${symbol} "
+	print "${user}${host}:${bedrock}%{$fg[blue]%}%~%{$reset_color%}${symbol} "
+}
+
+function build_rprompt {
+	print "$(git_prompt_info)"
 }
 
 PROMPT='$(build_prompt)'
+RPROMPT='$(build_rprompt)'
+
+# COMMAND NOT FOUND
+if iscmd command-not-found; then
+	function command_not_found_handler() {
+		command-not-found "$1"
+	}
+fi
 
 # ALIASES
 alias :q=exit
@@ -282,6 +292,7 @@ _autosudo dnf
 _autosudo yast2
 _autosudo systemctl
 _autosudo journalctl
+_autosudo nixos-rebuild
 
 # Load .post.zsh if it exists
 if [ -f ~/.post.zsh ]; then
