@@ -1,5 +1,4 @@
-#!/bin/bash
-if ! systemctl status docker>/dev/null; then systemctl start docker.socket; fi
+#!/usr/bin/env bash
 docker run --rm -it \
     -v "$PWD:/pwd" \
     -v "/var/cache/pacman/pkg:/var/cache/pacman/pkg" \
