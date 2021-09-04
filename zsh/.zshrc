@@ -293,6 +293,7 @@ _autosudo yast2
 _autosudo systemctl
 _autosudo journalctl
 _autosudo nixos-rebuild
+_autosudo nix-collect-garbage
 
 # Load .post.zsh if it exists
 if [ -f ~/.post.zsh ]; then
