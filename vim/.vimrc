@@ -10,20 +10,19 @@ autocmd!
 command! Reload source $MYVIMRC
 autocmd BufWritePost $MYVIMRC Reload
 
-"VIM needs a POSIX compliant shell
-if &shell == '/usr/bin/fish'
-	set shell=/bin/bash
+if isdirectory("/run/current-system/sw/bin")
+	set shell=/run/current-system/sw/bin/bash
 endif
 
 "Auto-Install Plug
 	if has("unix")
-		if empty(glob('~/.vim/autoload/plug.vim'))
-			silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+		if empty(glob($HOME.'/.vim/autoload/plug.vim'))
+			!curl -fLo $HOME/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 		endif
 	endif
 
 "Plugins
-	call plug#begin('~/.vim/bundle')
+	call plug#begin('$HOME/.vim/bundle')
 			"Plug 'glacambre/firenvim'
 			"Plug 'neoclide/coc.nvim', {'tag': '*', 'do': { -> coc#util#install()}}
 			"if has("python3") | Plug 'anned20/vimsence' | endif
@@ -123,7 +122,7 @@ let g:airline_theme = 'codedark'
 
 "Spell-Check
 	autocmd FileType * setlocal nospell
-	set spellfile=~/Dokumente/vim-spell.utf-8.add
+	set spellfile=$HOME/Dokumente/vim-spell.utf-8.add
 	set spelllang=de_de,en_us
 
 "Buffers
@@ -137,7 +136,7 @@ let g:airline_theme = 'codedark'
 
 "Tab characters
 	function! AutoTab() "Use tab to indent and spaces to align
-		if strpart(getline('.'), 0, col('.') - 1) =~ '^\s*$'
+		if strpart(getline('.'), 0, col('.') - 1) =$HOME '^\s*$'
 			return "\<Tab>"
 		else
 			return "    "
