@@ -166,7 +166,7 @@ function build_prompt {
 }
 
 function build_rprompt {
-	print "$(git_prompt_info)"
+	# print "$(git_prompt_info)"
 }
 
 PROMPT='$(build_prompt)'
