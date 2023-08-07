@@ -36,7 +36,7 @@ function iscmd {
 if ! sha256sum -c ~/.zsh.sha >/dev/null 2>&1; then
 	SHOWPROGRESS=true
 	echo -e "$INFO zsh config was updated"
-	sha256sum ~/.zsh_plugins.txt ~/.zshrc > ~/.zsh.sha
+	sha256sum ~/.zsh_plugins.txt ~/.zshrc >~/.zsh.sha
 else
 	SHOWPROGRESS=false
 fi
@@ -185,11 +185,12 @@ alias cls="clear"
 alias cre="clear; exec zsh"
 alias mkdir="mkdir -p"
 alias py="python3"
+iscmd "ipython" && alias py="ipython"
 alias re="exec zsh"
 alias start=xdg-open
 alias temp="pushd $(mktemp -d)"
 alias vi=vim
-iscmd "ipython" && alias py="ipython"
+alias t="tmux attach || tmux"
 
 # git
 alias g="git"
@@ -216,10 +217,10 @@ alias spl="svn update"
 alias st="svn log | less"
 
 # Kitty
-alias title="kitty @set-window-title"
-alias light="kitty @set-colors foreground=black background=white; kitty @set-background-opacity 1"
-alias dark="kitty @set-colors --reset; kitty @set-background-opacity 0.8"
-alias neo="kitty @set-colors foreground=green background=black; kitty @set-background-opacity 1"
+# alias title="kitty @set-window-title"
+# alias light="kitty @set-colors foreground=black background=white; kitty @set-background-opacity 1"
+# alias dark="kitty @set-colors --reset; kitty @set-background-opacity 0.8"
+# alias neo="kitty @set-colors foreground=green background=black; kitty @set-background-opacity 1"
 
 # WSL
 if [ -n "$WSL_DISTRO_NAME" ]; then
@@ -247,10 +248,10 @@ fi
 alias la="ls -la"
 alias l="ls -l"
 iscmd exa && {
-	alias ls="exa --git"
-	alias la="exa --git -la"
-	alias l="exa --git -l"
-	alias tree="exa --tree"
+	alias ls="exa --icons --git"
+	alias la="exa --icons --git -la"
+	alias l="exa --icons --git -l"
+	alias tree="exa --icons --tree"
 }
 
 iscmd colordiff && {
