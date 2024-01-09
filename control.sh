@@ -132,6 +132,7 @@ function autolink_all {
 	chk_cmd podman
 	chk_cmd python3
 	chk_cmd rofi
+	chk_cmd starship
 	chk_cmd vim
 	chk_cmd xfce4-session
 	chk_cmd zathura
@@ -164,6 +165,7 @@ function autolink_all {
 	fi
 	autolink picom
 	autolink rofi
+	autolink starship
 	link scripts # Always link scripts
 	autolink xfce4-session
 	autolink zathura
@@ -225,7 +227,7 @@ function install {
 	cd "$(mktemp -d)"
 
 	# Is there a valid ssh key -> clone from nzbr.de with ssh
-	if is_present ssh && [ -f "$HOME/.ssh/id_ed25519.pub" ] && $downloadcmd https://github.com/nzbr.keys | grep -q "$(awk '{print $1" "$2;}' < ~/.ssh/id_ed25519.pub)"; then
+	if is_present ssh && [ -f "$HOME/.ssh/id_ed25519.pub" ] && $downloadcmd https://github.com/nzbr.keys | grep -q "$(awk '{print $1" "$2;}' <~/.ssh/id_ed25519.pub)"; then
 		repourl="git@github.com:nzbr/dotfiles.git"
 		echo -e "$INFO Downloading via SSH"
 	else

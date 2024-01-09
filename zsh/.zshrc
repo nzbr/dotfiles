@@ -83,9 +83,6 @@ if ! [ "$(command -v antibody)" = "$ANTIBODY" ]; then
 	fi
 fi
 
-# OMZ Config
-export ZSH="$(antibody home)/https-COLON--SLASH--SLASH-github.com-SLASH-ohmyzsh-SLASH-ohmyzsh"
-
 # Plugins
 $SHOWPROGRESS && echo -ne "$PENDING Starting antibody..."
 source <(antibody init)
@@ -97,25 +94,17 @@ antibody bundle <~/.zsh_plugins.txt || {
 }
 $SHOWPROGRESS && echo -e "\r$TICK Loading plugins"
 
-COMMAND_EXECUTION_TIMER_THRESHOLD=30
-COMMAND_EXECUTION_TIMER_PRECISION=0
-COMMAND_EXECUTION_TIMER_FOREGROUND=yellow
-COMMAND_EXECUTION_TIMER_FORMAT="H:M:S"
-COMMAND_EXECUTION_TIMER_PREFIX='\n Took '
-add-zsh-hook precmd append_command_execution_duration
-
 # Auto ls
 function auto-ls-newline {
 	echo ""
 }
-# function auto-ls-git-status {
-# 	if [[ $(git rev-parse --is-inside-work-tree 2> /dev/null) == true ]]; then
-# 		echo ''
-# 		git status | grep -P '\t' | sed 's/^\t//;/: /!s/^/untracked:  /'
-# 	fi
-# }
 AUTO_LS_COMMANDS=(newline ls)
 AUTO_LS_NEWLINE=false
+
+# history search
+bindkey '\eOA' history-substring-search-up
+bindkey '\eOB' history-substring-search-down
+HISTORY_SUBSTRING_SEARCH_ENSURE_UNIQUE=1
 
 # PROMPT
 
@@ -140,44 +129,15 @@ else
 	local host=""
 fi
 
-local bedrock=""
-if [ -f '/bedrock/bin/brl' ]; then
-	local stratum="$(/bedrock/bin/brl which /)"
-	local initstratum="$(/bedrock/bin/brl deref init)"
-	local bedrock="%{$fg[cyan]%}$stratum%{$reset_color%}:"
-	if echo "$PATH" | grep -q '/bedrock/cross/bin'; then
-		if [ "$stratum" = "$initstratum" ]; then
-			local bedrock=""
-		fi
-	else
-		local bedrock="%{$fg[red]%}$stratum!%{$reset_color%}:"
-	fi
-else
-	local isbedrock=false
-fi
-
 function build_prompt {
-	if [ "${PWD##/drv/}" != "${PWD}" ]; then
-		dir=$(pwd | sed -E 's|/drv/(.)|\U\1:|;s|/|\\\\|g;s|:$|:\\\\|')
-		print "ZSH ${dir}> "
-		return 0
-	fi
-	print "${user}${host}:${bedrock}%{$fg[blue]%}%~%{$reset_color%}${symbol} "
+	print "${user}${host}:%{$fg[blue]%}%~%{$reset_color%}${symbol} "
 }
 
 function build_rprompt {
-	# print "$(git_prompt_info)"
 }
 
 PROMPT='$(build_prompt)'
 RPROMPT='$(build_rprompt)'
-
-# COMMAND NOT FOUND
-if iscmd command-not-found; then
-	function command_not_found_handler() {
-		command-not-found "$1"
-	}
-fi
 
 # ALIASES
 alias :q=exit
@@ -216,42 +176,19 @@ alias sst="svn status"
 alias spl="svn update"
 alias st="svn log | less"
 
-# Kitty
-# alias title="kitty @set-window-title"
-# alias light="kitty @set-colors foreground=black background=white; kitty @set-background-opacity 1"
-# alias dark="kitty @set-colors --reset; kitty @set-background-opacity 0.8"
-# alias neo="kitty @set-colors foreground=green background=black; kitty @set-background-opacity 1"
-
-# WSL
-if [ -n "$WSL_DISTRO_NAME" ]; then
-	for drv in a b c d e f g h i j k l m n o p q r s t u v w x y z; do
-		upper=$(print $drv | sed 's|.*|\U&|')
-		alias "${drv}:"="cd /drv/$drv"
-		alias "${upper}:"="cd /drv/$drv"
-	done
-fi
-
 function spawn {
 	"$@" >/dev/null 2>&1 &
 	disown
 }
 
-# Open files is VSCode if in a remote shell
-if [ -n "${AMD_ENTRYPOINT}" ]; then
-	export EDITOR="code -w"
-	alias vim=code
-	alias vi=code
-	alias nano=code
-fi
-
 # Replace ls
 alias la="ls -la"
 alias l="ls -l"
-iscmd exa && {
-	alias ls="exa --icons --git"
-	alias la="exa --icons --git -la"
-	alias l="exa --icons --git -l"
-	alias tree="exa --icons --tree"
+iscmd eza && {
+	alias ls="eza --icons --git"
+	alias la="eza --icons --git -la"
+	alias l="eza --icons --git -l"
+	alias tree="eza --icons --tree"
 }
 
 iscmd colordiff && {
@@ -259,42 +196,13 @@ iscmd colordiff && {
 	alias diff="colordiff -u"
 }
 
-iscmd lsusb.py && {
-	alias lsusb=lsusb.py
-}
-
-iscmd qemu-system-x86_64 && {
-	alias qemu-kvm="qemu-system-x86_64 --enable-kvm"
-}
-
 function mcd {
 	mkdir -p "$1"
 	cd "$1"
 }
 
-# Change stratum (for bedrock)
-function cs {
-	exec strat "$1" zsh
-}
-function csr {
-	# Don't exec because the restrictions can't be removed by calling strat
-	strat -r "$1" zsh
-}
-
-# Automatic sudo
-function _autosudo {
-	iscmd $1 && alias $1="sudo $1"
-}
-_autosudo zypper
-_autosudo pacman
-_autosudo apt
-_autosudo apt-get
-_autosudo dnf
-_autosudo yast2
-_autosudo systemctl
-_autosudo journalctl
-_autosudo nixos-rebuild
-_autosudo nix-collect-garbage
+# Starship
+iscmd starship && eval "$(starship init zsh)"
 
 # Load .post.zsh if it exists
 if [ -f ~/.post.zsh ]; then

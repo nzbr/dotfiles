@@ -1,0 +1,182 @@
+#   
+format = """
+($cmd_duration
+
+)\
+$os( ${env_var.WSL_DISTRO_NAME}) \
+$username\
+[@$hostname](fg:green)\
+$conda\
+$git_branch\
+$java\
+$gradle\
+$scala\
+$nodejs\
+$haskell\
+$status\
+$line_break\
+[$shell](fg:white)\
+[ $directory](fg:white)>\
+[ ]()\
+"""
+
+[cmd_duration]
+min_time = 5_000
+format = "Took [$duration]($style)"
+show_notifications = true
+min_time_to_notify = 30_000
+
+[directory]
+style = ""
+format = "$path"
+truncation_length = 0
+truncation_symbol = ""
+
+[env_var.WSL_DISTRO_NAME]
+format = "$env_value"
+description = "The current WSL distro"
+
+[hostname]
+ssh_only = false
+format = "$hostname"
+
+[os]
+format = "$symbol"
+disabled = false
+
+[os.symbols]
+Alpaquita = " "
+Alpine = " "
+Amazon = " "
+Android = " "
+Arch = " "
+Artix = " "
+CentOS = " "
+Debian = " "
+DragonFly = " "
+Emscripten = " "
+EndeavourOS = " "
+Fedora = " "
+FreeBSD = " "
+Garuda = "󰛓 "
+Gentoo = " "
+HardenedBSD = "󰞌 "
+Illumos = "󰈸 "
+Linux = " "
+Mabox = " "
+Macos = " "
+Manjaro = " "
+Mariner = " "
+MidnightBSD = " "
+Mint = " "
+NetBSD = " "
+NixOS = " "
+OpenBSD = "󰈺 "
+openSUSE = " "
+OracleLinux = "󰌷 "
+Pop = " "
+Raspbian = " "
+Redhat = " "
+RedHatEnterprise = " "
+Redox = "󰀘 "
+Solus = "󰠳 "
+SUSE = " "
+Ubuntu = " "
+Unknown = " "
+Windows = "󰍲 "
+
+[shell]
+disabled = false
+bash_indicator = "SH"
+fish_indicator = "FS"
+zsh_indicator = "ZS"
+powershell_indicator = "PS"
+ion_indicator = "ION"
+elvish_indicator = "ELV"
+tcsh_indicator = "TCS"
+xonsh_indicator = "XN"
+cmd_indicator = "CMD"
+nu_indicator = "NU"
+format = "$indicator"
+
+[username]
+show_always = true
+style_user = "fg:green"
+style_root = "fg:red"
+format = '[$user]($style)'
+disabled = false
+
+[git_branch]
+symbol = ""
+# style = "bg:#FCA17D"
+style = "fg:#FCA17D"
+format = '[ $symbol $branch ]($style)'
+
+[status]
+disabled = false
+format = '[ $symbol $status ](fg:bright-red)'
+
+## Environments
+
+[conda]
+format = '[ $symbol$environment ]($style)'
+
+## Programming Languages
+
+[gradle]
+style = ""
+format = '[ $symbol ($version) ]($style)'
+
+[haskell]
+symbol = " "
+style = ""
+format = '[ $symbol ($version) ]($style)'
+
+[java]
+symbol = " "
+style = ""
+format = '[ $symbol ($version) ]($style)'
+
+[nodejs]
+symbol = ""
+style = ""
+format = '[ $symbol ($version) ]($style)'
+
+## Disabled Modules
+
+[c]
+disabled = true
+
+[character]
+disabled = false
+format = "$symbol"
+
+[docker_context]
+disabled = true
+symbol = " "
+style = "bg:#06969A"
+format = '[ $symbol $context ]($style) $path'
+
+[elixir]
+disabled = true
+
+[elm]
+disabled = true
+
+[git_status]
+disabled = true
+
+[golang]
+disabled = true
+
+[julia]
+disabled = true
+
+[nim]
+disabled = true
+
+[rust]
+disabled = true
+
+[scala]
+disabled = true

@@ -1,14 +1,5 @@
-ohmyzsh/ohmyzsh
-
-ohmyzsh/ohmyzsh path:plugins/colored-man-pages
-ohmyzsh/ohmyzsh path:plugins/command-not-found
-ohmyzsh/ohmyzsh path:plugins/dirhistory
-ohmyzsh/ohmyzsh path:plugins/git
-ohmyzsh/ohmyzsh path:plugins/git-auto-fetch
-ohmyzsh/ohmyzsh path:plugins/mosh
-
 desyncr/auto-ls
-olets/command-execution-timer
 zsh-users/zsh-completions
 zsh-users/zsh-syntax-highlighting
-
+zsh-users/zsh-autosuggestions
+zsh-users/zsh-history-substring-search
