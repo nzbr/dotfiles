@@ -165,7 +165,6 @@ alias gst="git stash"
 alias gsp="git stash pop"
 alias gco="git checkout"
 alias gd="git diff"
-alias gt="git log --graph --oneline --all"
 
 # svn
 alias s="svn"
