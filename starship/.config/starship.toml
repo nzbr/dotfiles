@@ -15,8 +15,8 @@ $nodejs\
 $haskell\
 $status\
 $line_break\
-[$shell](fg:white)\
-[ $directory](fg:white)>\
+$shell\
+[ ]()$directory>\
 [ ]()\
 """
 
