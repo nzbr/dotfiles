@@ -15,11 +15,6 @@ export ERR="\e[1;31m!!!\e[0m"
 export OK="\e[1;32m:::\e[0m"
 #############
 
-# Load in any bash config
-if [ -f ~/.bashrc ]; then
-	source ~/.bashrc
-fi
-
 # Load .pre.zsh if it exists
 if [ -f ~/.pre.zsh ]; then
 	source ~/.pre.zsh
