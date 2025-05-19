@@ -13,10 +13,9 @@ $gradle\
 $scala\
 $nodejs\
 $haskell\
-$status\
 $line_break\
 $shell\
-[ ]()$directory>\
+[ ]()$directory$character\
 [ ]()\
 """
 
@@ -112,10 +111,6 @@ symbol = ""
 style = "fg:#FCA17D"
 format = '[ $symbol $branch ]($style)'
 
-[status]
-disabled = false
-format = '[ $symbol $status ](fg:bright-red)'
-
 ## Environments
 
 [conda]
@@ -143,6 +138,10 @@ style = ""
 format = '[ $symbol ($version) ]($style)'
 
 ## Disabled Modules
+
+[status]
+disabled = true
+format = '[ $symbol $status ](fg:bright-red)'
 
 [c]
 disabled = true
