@@ -116,6 +116,15 @@ bindkey '\eOA' history-substring-search-up
 bindkey '\eOB' history-substring-search-down
 HISTORY_SUBSTRING_SEARCH_ENSURE_UNIQUE=1
 
+# Keybindings
+bindkey "\e[1~" beginning-of-line # Home
+bindkey "\e[4~" end-of-line       # End
+bindkey "\e[3~" delete-char       # Del
+bindkey "\e[H"  beginning-of-line # Home (xterm)
+bindkey "\e[F"  end-of-line       # End (xterm)
+bindkey "\eOH"  beginning-of-line # Home (gnome)
+bindkey "\eOF"  end-of-line       # End (gnome)
+
 # PROMPT
 
 ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg[cyan]%}["
