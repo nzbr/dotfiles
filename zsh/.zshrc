@@ -28,14 +28,6 @@ function iscmd {
 	fi
 }
 
-if ! sha256sum -c ~/.zsh.sha >/dev/null 2>&1; then
-	SHOWPROGRESS=true
-	echo -e "$INFO zsh config was updated"
-	sha256sum ~/.zsh_plugins.txt ~/.zshrc >~/.zsh.sha
-else
-	SHOWPROGRESS=false
-fi
-
 # ENVIRONMENT VARIABLES
 export EDITOR=vim
 export MAKEFLAGS="-j$(nproc)"
@@ -53,41 +45,26 @@ path "$HOME/.yarn/bin"
 path "$HOME/scripts"
 iscmd go && path "$(go env GOPATH)/bin"
 
-# Load antibody
+# Load antidote
 ZSH_DISABLE_COMPFIX=true
-ANTIBODY_DIR="$HOME/.cache/antibody"
-ANTIBODY="$ANTIBODY_DIR/antibody"
-if ! [ -f $ANTIBODY ]; then
-	SHOWPROGRESS=true
-	echo -ne "$PENDING Downloading antibody..."
-	mkdir -p "$ANTIBODY_DIR"
-	curl -sSL git.io/antibody -o "$ANTIBODY_DIR/install.zsh"
-	zsh "$ANTIBODY_DIR/install.zsh" -b "$ANTIBODY_DIR" >"$ANTIBODY_DIR"/install.log 2>&1 || {
-		echo -e "$ERR FAILED TO INSTALL ANTIBODY"
+ANTIDOTE_DIR="$HOME/.cache/antidote"
+ANTIDOTE_SCRIPT="$ANTIDOTE_DIR/antidote.zsh"
+
+if [ -f "$ANTIDOTE_SCRIPT" ]; then
+	source "$ANTIDOTE_SCRIPT"
+elif command -v antidote >/dev/null; then
+	source <(antidote init)
+else
+	echo -ne "$PENDING Downloading antidote..."
+	mkdir -p "$ANTIDOTE_DIR"
+	git clone --depth=1 https://github.com/mattmc3/antidote.git "$ANTIDOTE_DIR" >/dev/null 2>&1 || {
+		echo -e "$ERR FAILED TO INSTALL ANTIDOTE"
 		return 1
 	}
-	echo -e "\r$TICK Downloading antibody"
+	echo -e "\r$TICK Downloading antidote"
+	source "$ANTIDOTE_SCRIPT"
 fi
-if ! [ "$(command -v antibody)" = "$ANTIBODY" ]; then
-	export PATH="$ANTIBODY_DIR:$PATH"
-	if ! [ "$(command -v antibody)" = "$ANTIBODY" ]; then
-		echo -e "$ERR Antibody was not found or found at an unexpected location"
-		echo -e "$ERR Expected: $ANTIBODY"
-		echo -e "$ERR Found: $(command -v antibody)"
-		return 1
-	fi
-fi
-
-# Plugins
-$SHOWPROGRESS && echo -ne "$PENDING Starting antibody..."
-source <(antibody init)
-$SHOWPROGRESS && echo -e "\r$TICK Starting antibody"
-$SHOWPROGRESS && echo -ne "$PENDING Loading plugins..."
-antibody bundle <~/.zsh_plugins.txt || {
-	echo -e "$ERR Failed to load plugins"
-	return 1
-}
-$SHOWPROGRESS && echo -e "\r$TICK Loading plugins"
+antidote load ~/.zsh_plugins.txt
 
 # Auto ls
 function auto-ls-newline {
