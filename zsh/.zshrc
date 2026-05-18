@@ -96,6 +96,21 @@ function auto-ls-newline {
 AUTO_LS_COMMANDS=(newline ls)
 AUTO_LS_NEWLINE=false
 
+# History
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=10000
+SAVEHIST=10000
+
+setopt EXTENDED_HISTORY      # Write the history file in the ": 1234567890:0;command" format.
+setopt SHARE_HISTORY         # Share history between all sessions.
+setopt APPEND_HISTORY        # Allow multiple sessions to append to one history file.
+setopt INC_APPEND_HISTORY    # Write to the history file immediately, not when the shell exits.
+setopt HIST_IGNORE_DUPS      # Do not record an event that was just recorded again.
+setopt HIST_IGNORE_ALL_DUPS  # Delete old recorded event if new event is a duplicate.
+setopt HIST_IGNORE_SPACE     # Do not record an event starting with a space.
+setopt HIST_SAVE_NO_DUPS     # Do not write duplicate events to history file.
+setopt HIST_VERIFY           # Do not execute immediately upon history expansion.
+
 # history search
 bindkey '\eOA' history-substring-search-up
 bindkey '\eOB' history-substring-search-down
