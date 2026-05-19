@@ -201,6 +201,10 @@ function mcd {
 	cd "$1"
 }
 
+function gcd {
+	cd "$(git rev-parse --show-toplevel)"
+}
+
 # Starship
 iscmd starship && eval "$(starship init zsh)"
 
