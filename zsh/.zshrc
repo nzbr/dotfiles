@@ -20,6 +20,11 @@ if [ -f ~/.pre.zsh ]; then
 	source ~/.pre.zsh
 fi
 
+# Fix $TEMP if it does not exist (sometimes a problem with vscode+direnv+nix)
+if [[ -n "${TEMP:-}" ]]; then
+  mkdir -p $TEMP || true
+fi
+
 function iscmd {
 	if command -v "$1" >/dev/null; then
 		return 0
