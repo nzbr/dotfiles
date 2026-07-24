@@ -349,7 +349,9 @@ fi
 
 # Claude Code usage limits, as progress bars, shown right after the directory.
 session_pct=$(echo "$input" | jqr '.rate_limits.five_hour.used_percentage // empty')
+session_resets_at=$(echo "$input" | jqr '.rate_limits.five_hour.resets_at // empty')
 weekly_pct=$(echo "$input" | jqr '.rate_limits.seven_day.used_percentage // empty')
+weekly_resets_at=$(echo "$input" | jqr '.rate_limits.seven_day.resets_at // empty')
 # Speculative/forward-compatible only -- see header note above. Empty today.
 fable_pct=$(echo "$input" | jqr '.rate_limits.fable.used_percentage // empty')
 
@@ -357,12 +359,65 @@ limit_segments=()
 
 if [ -n "$session_pct" ]; then
 	s_r=$(printf '%.0f' "$session_pct")
-	limit_segments+=("${dim}Session${reset} $(progress_bar "$s_r")")
+
+	# "(HH:MM)" countdown to the 5-hour session reset, right after the
+	# "Session" label -- styled the same dim "(...)" way the context ring
+	# shows "(50k/200k)" next to it. Only "Session" (five_hour) gets this,
+	# not "Week" -- the user specifically asked about the current session.
+	# resets_at is gated the same `// empty` way as session_pct itself (only
+	# present for subscribers after the first API response), and a
+	# non-positive/garbage remainder is treated the same as "absent" -- no
+	# broken/negative countdown, just fall back to the plain "Session <bar>"
+	# rendering.
+	#
+	# Fixed-width zero-padded HH:MM (always exactly 5 characters) rather than
+	# variable-width "2h 15m"/"29m"/"<1m" text -- a variable-length countdown
+	# shifts everything after it left/right on every refresh as the digit
+	# count changes, which defeats the point of a stable layout. Precision at
+	# the very tail end is deliberately sacrificed for that stability: under
+	# a minute remaining just floors to "00:00" rather than getting its own
+	# special case.
+	session_reset_part=""
+	if [ -n "$session_resets_at" ]; then
+		now_epoch=$(date +%s)
+		session_remaining_secs=$(( session_resets_at - now_epoch ))
+		if [ "$session_remaining_secs" -gt 0 ] 2>/dev/null; then
+			r_h=$(( session_remaining_secs / 3600 ))
+			r_m=$(( (session_remaining_secs % 3600) / 60 ))
+			session_remaining_text=$(printf '%02d:%02d' "$r_h" "$r_m")
+			session_reset_part="${dim}(${session_remaining_text})${reset} "
+		fi
+	fi
+
+	limit_segments+=("${dim}Session${reset} ${session_reset_part}$(progress_bar "$s_r")")
 fi
 
 if [ -n "$weekly_pct" ]; then
 	w_r=$(printf '%.0f' "$weekly_pct")
-	limit_segments+=("${dim}Week${reset} $(progress_bar "$w_r")")
+
+	# "(D:HH:MM)" countdown to the 7-day weekly reset, mirroring the Session
+	# block's countdown above -- same gating (resets_at present + remaining
+	# time > 0, else fall back to the plain "Week <bar>" rendering) and same
+	# dim "(...)" wrapper style. Unlike Session, a 7-day window can have
+	# multi-day remaining time, so this adds a leading day digit (0-6,
+	# realistically never needing zero-padding) ahead of the zero-padded
+	# HH:MM, e.g. "3:04:12" for 3 days/4h/12m remaining -- still a fixed
+	# width for any value this window can realistically produce, so the
+	# layout stays stable as it counts down.
+	weekly_reset_part=""
+	if [ -n "$weekly_resets_at" ]; then
+		now_epoch=$(date +%s)
+		weekly_remaining_secs=$(( weekly_resets_at - now_epoch ))
+		if [ "$weekly_remaining_secs" -gt 0 ] 2>/dev/null; then
+			wr_d=$(( weekly_remaining_secs / 86400 ))
+			wr_h=$(( (weekly_remaining_secs % 86400) / 3600 ))
+			wr_m=$(( (weekly_remaining_secs % 3600) / 60 ))
+			weekly_remaining_text=$(printf '%d:%02d:%02d' "$wr_d" "$wr_h" "$wr_m")
+			weekly_reset_part="${dim}(${weekly_remaining_text})${reset} "
+		fi
+	fi
+
+	limit_segments+=("${dim}Week${reset} ${weekly_reset_part}$(progress_bar "$w_r")")
 fi
 
 if [ -n "$fable_pct" ]; then
