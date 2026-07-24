@@ -393,7 +393,8 @@ case "$model_key" in
 	*) model_color="$dim" ;;
 esac
 
-line1_left="${os_icon} ${user_part}${host_part}${git_part} ${display_dir}"
+core_left="${os_icon} ${user_part}${host_part}${git_part} ${display_dir}"
+line1_left="$core_left"
 [ -n "$limits_part" ] && line1_left="${line1_left} ${dim}│${reset} ${limits_part}"
 
 ctx_tokens=$(echo "$input" | jqr '.context_window.total_input_tokens // empty')
@@ -439,6 +440,8 @@ if [ -n "$ctx_used" ]; then
 	fi
 fi
 
+line2=""
+
 if [ -n "$line1_right" ]; then
 	term_width="${COLUMNS:-}"
 	[ -z "$term_width" ] && term_width=$(stty size < /dev/tty 2>/dev/null | awk '{print $2}')
@@ -456,10 +459,33 @@ if [ -n "$line1_right" ]; then
 	pad=$(( term_width - left_len - right_len ))
 
 	if [ "$pad" -lt 1 ]; then
-		# Not enough room to right-align without overflowing -- fall back to
-		# inline placement right after the left side instead of risking
-		# clipping off the edge of the visible line.
-		line1="${line1_left} ${line1_right}"
+		# Not enough room to fit everything on one line -- instead of
+		# risking clipping/overflow against Claude Code's own UI chrome,
+		# move everything from the session-limit bar onward (rate-limit
+		# bars, then model/effort/context ring) down to its own second
+		# line, leaving line1 as just the core left-hand side (icon,
+		# user@host, git branch, directory -- no rate-limit bars).
+		line1="$core_left"
+		if [ -n "$limits_part" ]; then
+			# Right-align line1_right against the terminal edge on line2
+			# too -- same term_width and the same vis_len-based spacer math
+			# as the line1_left/line1_right split above, just with
+			# limits_part standing in for line1_left as the left anchor.
+			limits_len=$(vis_len "$limits_part")
+			right_len2=$(vis_len "$line1_right")
+			pad2=$(( term_width - limits_len - right_len2 ))
+			if [ "$pad2" -lt 1 ]; then
+				# Even line2 alone doesn't fit -- same single-space
+				# fallback the pre-split single-line path used to fall
+				# back to in this situation.
+				line2="${limits_part} ${line1_right}"
+			else
+				spacer2=$(printf '%*s' "$pad2" '')
+				line2="${limits_part}${spacer2}${line1_right}"
+			fi
+		else
+			line2="$line1_right"
+		fi
 	else
 		spacer=$(printf '%*s' "$pad" '')
 		line1="${line1_left}${spacer}${line1_right}"
@@ -469,14 +495,30 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Warning line -- only rendered (as an extra line ABOVE line1) when the
-# dependency check at the top of the script found something missing; when
-# every required command is present this adds nothing at all.
+# Assemble final output -- up to three lines, in order:
+#   1. dependency warning (only when something's missing, see top of script)
+#   2. line1 (core left side, plus rate-limit bars/model/effort/context ring
+#      when everything fit on one line)
+#   3. line2 (only when the terminal was too narrow to fit it all on line1 --
+#      see the width check above; carries the rate-limit bars onward)
+# Built as an array and joined with '\n' so any combination of
+# warning/line2 being present or absent still composes correctly, and the
+# plain case (no warning, no line2) stays byte-for-byte a single `line1`.
 # ---------------------------------------------------------------------------
+output_lines=()
 if [ "${#missing_commands[@]}" -gt 0 ]; then
 	missing_list=$(IFS=', '; echo "${missing_commands[*]}")
-	warning_line="${red}⚠ statusline: missing required command(s): ${missing_list}${reset}"
-	printf '%s\n%s' "$warning_line" "$line1"
-else
-	printf '%s' "$line1"
+	output_lines+=("${red}⚠ statusline: missing required command(s): ${missing_list}${reset}")
 fi
+output_lines+=("$line1")
+[ -n "$line2" ] && output_lines+=("$line2")
+
+_out_first=true
+for _out_line in "${output_lines[@]}"; do
+	if $_out_first; then
+		printf '%s' "$_out_line"
+		_out_first=false
+	else
+		printf '\n%s' "$_out_line"
+	fi
+done
