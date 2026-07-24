@@ -276,10 +276,45 @@ render_rainbow() {
 }
 
 # ---------------------------------------------------------------------------
+# Dependency check -- external commands this script calls (not shell
+# builtins). If any are missing, a warning line is printed ABOVE the normal
+# statusline (see the very end of the script) instead of letting the
+# affected segments silently blank out with no indication why -- this is
+# exactly what happened when `jq` turned out to be missing on PATH: every
+# JSON-derived field (rate-limit bars, model name, context ring) vanished at
+# once with nothing to explain it. Add to REQUIRED_COMMANDS if a future
+# change introduces a new external tool dependency.
+#
+# `stty`/`tput` (terminal-width detection) are deliberately NOT in this
+# list: their absence -- or simply running without a controlling tty -- is
+# already an expected, explicitly-handled fallback path (default 80 columns)
+# further below, not a genuine "missing dependency".
+# ---------------------------------------------------------------------------
+REQUIRED_COMMANDS=(jq git awk sed tr date hostname whoami id cat)
+missing_commands=()
+for _cmd in "${REQUIRED_COMMANDS[@]}"; do
+	command -v "$_cmd" >/dev/null 2>&1 || missing_commands+=("$_cmd")
+done
+
+HAS_JQ=1
+command -v jq >/dev/null 2>&1 || HAS_JQ=0
+
+jqr() {
+	# `jq -r` wrapper: a silent no-op (prints nothing) when jq isn't
+	# installed, instead of every call site below trying (and failing) to
+	# exec a binary that doesn't exist. Every field read through this already
+	# has a `// empty`-style fallback baked into its jq filter, so an empty
+	# result here degrades exactly the way a genuinely-absent JSON field
+	# would -- the rest of the line still renders with whatever it has.
+	[ "$HAS_JQ" -eq 1 ] && jq -r "$@"
+	return 0
+}
+
+# ---------------------------------------------------------------------------
 # Line 1 -- Starship-inspired prompt + model, context on the right
 # ---------------------------------------------------------------------------
 
-cwd=$(echo "$input" | jq -r '.workspace.current_dir // .cwd // empty')
+cwd=$(echo "$input" | jqr '.workspace.current_dir // .cwd // empty')
 [ -z "$cwd" ] && cwd="$PWD"
 display_dir="${cwd/#$HOME/~}"
 
@@ -313,10 +348,10 @@ if git --no-optional-locks -C "$cwd" rev-parse --is-inside-work-tree >/dev/null 
 fi
 
 # Claude Code usage limits, as progress bars, shown right after the directory.
-session_pct=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty')
-weekly_pct=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty')
+session_pct=$(echo "$input" | jqr '.rate_limits.five_hour.used_percentage // empty')
+weekly_pct=$(echo "$input" | jqr '.rate_limits.seven_day.used_percentage // empty')
 # Speculative/forward-compatible only -- see header note above. Empty today.
-fable_pct=$(echo "$input" | jq -r '.rate_limits.fable.used_percentage // empty')
+fable_pct=$(echo "$input" | jqr '.rate_limits.fable.used_percentage // empty')
 
 limit_segments=()
 
@@ -346,9 +381,9 @@ for seg in "${limit_segments[@]}"; do
 	fi
 done
 
-model_name=$(echo "$input" | jq -r '.model.display_name // empty')
-model_key=$(echo "$input" | jq -r '((.model.id // "") + " " + (.model.display_name // ""))' | tr '[:upper:]' '[:lower:]')
-effort_level=$(echo "$input" | jq -r '.effort.level // empty')
+model_name=$(echo "$input" | jqr '.model.display_name // empty')
+model_key=$(echo "$input" | jqr '((.model.id // "") + " " + (.model.display_name // ""))' | tr '[:upper:]' '[:lower:]')
+effort_level=$(echo "$input" | jqr '.effort.level // empty')
 
 case "$model_key" in
 	*haiku*) model_color="$haiku_color" ;;
@@ -361,10 +396,10 @@ esac
 line1_left="${os_icon} ${user_part}${host_part}${git_part} ${display_dir}"
 [ -n "$limits_part" ] && line1_left="${line1_left} ${dim}│${reset} ${limits_part}"
 
-ctx_tokens=$(echo "$input" | jq -r '.context_window.total_input_tokens // empty')
-ctx_size=$(echo "$input" | jq -r '.context_window.context_window_size // empty')
+ctx_tokens=$(echo "$input" | jqr '.context_window.total_input_tokens // empty')
+ctx_size=$(echo "$input" | jqr '.context_window.context_window_size // empty')
 
-ctx_used=$(echo "$input" | jq -r '.context_window.used_percentage // empty')
+ctx_used=$(echo "$input" | jqr '.context_window.used_percentage // empty')
 if [ -z "$ctx_used" ] && [ -n "$ctx_tokens" ] && [ -n "$ctx_size" ] && [ "$ctx_size" -gt 0 ] 2>/dev/null; then
 	ctx_used=$(awk -v t="$ctx_tokens" -v s="$ctx_size" 'BEGIN { printf "%.2f", (t / s) * 100 }')
 fi
@@ -433,4 +468,15 @@ else
 	line1="$line1_left"
 fi
 
-printf '%s' "$line1"
+# ---------------------------------------------------------------------------
+# Warning line -- only rendered (as an extra line ABOVE line1) when the
+# dependency check at the top of the script found something missing; when
+# every required command is present this adds nothing at all.
+# ---------------------------------------------------------------------------
+if [ "${#missing_commands[@]}" -gt 0 ]; then
+	missing_list=$(IFS=', '; echo "${missing_commands[*]}")
+	warning_line="${red}⚠ statusline: missing required command(s): ${missing_list}${reset}"
+	printf '%s\n%s' "$warning_line" "$line1"
+else
+	printf '%s' "$line1"
+fi
