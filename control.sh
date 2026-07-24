@@ -122,6 +122,7 @@ function autolink_all {
 
 	echo -e "\n$INFO Looking for installed programs"
 	chk_cmd abcde
+	chk_cmd claude
 	chk_cmd docker
 	chk_cmd fish
 	chk_cmd i3
@@ -141,6 +142,7 @@ function autolink_all {
 	echo ""
 
 	autolink abcde
+	autolink claude
 	if is_present docker || is_present podman; then
 		link docker
 	else
