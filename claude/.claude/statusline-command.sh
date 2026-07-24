@@ -17,11 +17,27 @@
 #                                that field is ever added by Claude Code.
 #   - [right-aligned] model name (colored by tier: Haiku teal / Sonnet blue /
 #     Opus purple / Fable gold)  <- input.model.display_name, input.model.id
-#   - [right-aligned, after model] ring NN% (raw/size)  <- ring glyph
+#   - [right-aligned, after model] thinking effort level, e.g. "xhigh" --
+#     <- input.effort.level, only shown when the field is present (i.e. the
+#     current model supports/exposes a reasoning effort level). Colored to
+#     match Claude Code's own /effort picker (sampled from screenshots):
+#     low=amber, medium=green, high=periwinkle, xhigh=violet, max=orange.
+#     xhigh and max also get simplified versions of that UI's special
+#     flourishes instead of a plain solid color -- xhigh's "shiny" traveling
+#     highlight (render_shiny) and max's rainbow hue-cycle (render_rainbow).
+#     Neither is a real animation loop (this script is stateless -- Claude
+#     Code just re-runs it from scratch on every refresh); both derive their
+#     current "frame" straight from the wall clock (date +%s) instead, which
+#     works because Claude Code re-invokes the statusline on its
+#     refreshInterval (settings.json, currently 1s -- the minimum Claude Code
+#     allows; fractional values like 0.5 aren't supported) in addition to its
+#     normal event-driven triggers, so the frame still visibly advances tick
+#     to tick.
+#   - [right-aligned, after model/effort] ring NN% (raw/size)  <- ring glyph
 #     (○◔◑◕●) fills with input.context_window.used_percentage (falls back to
 #     total_input_tokens / context_window_size), followed by "(used/size)"
-#     in raw tokens (e.g. "Sonnet 5 ● 84% (168k/200k)"), abbreviated with a
-#     "k" suffix.
+#     in raw tokens (e.g. "Sonnet 5 xhigh ● 84% (168k/200k)"), abbreviated
+#     with a "k" suffix.
 #
 #     No trailing "❯"/">" indicator -- intentionally removed.
 #
@@ -56,6 +72,18 @@ haiku_color=$'\033[38;2;126;231;200m'  # teal   #7EE7C8 -- small/fast model
 sonnet_color=$'\033[38;2;111;168;255m' # blue   #6FA8FF -- balanced model
 opus_color=$'\033[38;2;199;146;234m'   # purple #C792EA -- large/capable model
 fable_color=$'\033[38;2;255;216;102m'  # gold   #FFD866 -- top-tier model
+
+# Effort-level colors, sampled directly from Claude Code's own /effort picker
+# (the color each level's label is rendered in when selected there), so the
+# statusline stays visually consistent with that UI:
+effort_low_color=$'\033[38;2;255;193;7m'     # amber  #FFC107
+effort_medium_color=$'\033[38;2;78;186;101m' # green  #4EBA65
+effort_high_color=$'\033[38;2;177;185;249m'  # periwinkle #B1B9F9
+
+# xhigh/max get animated flourishes (render_shiny/render_rainbow) rather than
+# one solid color, so these are plain "R G B" components for those render
+# functions to build per-character escape codes from, not full escape codes:
+effort_xhigh_rgb="175 135 255" # violet #AF87FF -- xhigh's shine sweeps around this
 
 strip_ansi() {
 	printf '%s' "$1" | sed -E $'s/\x1b\\[[0-9;]*m//g'
@@ -161,6 +189,92 @@ progress_bar() {
 	printf "%s%s%s%s%s %s%s%%%s" "$c" "$bar" "$dim" "$bar_empty" "$reset" "$c" "$p" "$reset"
 }
 
+render_shiny() {
+	# $1 = word, $2/$3/$4 = base r/g/b (0-255), $5 = wall-clock seconds.
+	# "Shiny" sweep for xhigh: a bright highlight travels left-to-right across
+	# the word's letters, then pauses, then loops. There's no persistent
+	# animation state between invocations, so the current frame is derived
+	# straight from the wall clock -- good enough since Claude Code re-runs
+	# this script every refreshInterval tick (currently 1s, see settings.json;
+	# 1 is the minimum Claude Code allows), plenty of ticks to see it move.
+	local word="$1" br="$2" bg="$3" bb="$4" now="$5"
+	local len=${#word} pause=3 total tick pos i char dist blend r g b out=""
+	total=$(( len + pause ))
+	tick="$now"
+	pos=$(( tick % total ))
+	[ "$pos" -ge "$len" ] && pos=-100 # currently in the "paused" part of the loop
+	for (( i = 0; i < len; i++ )); do
+		char="${word:i:1}"
+		dist=$(( i - pos ))
+		[ "$dist" -lt 0 ] && dist=$(( -dist ))
+		if [ "$dist" -eq 0 ]; then
+			blend=100
+		elif [ "$dist" -eq 1 ]; then
+			blend=45
+		else
+			blend=0
+		fi
+		r=$(( br + (255 - br) * blend / 100 ))
+		g=$(( bg + (255 - bg) * blend / 100 ))
+		b=$(( bb + (255 - bb) * blend / 100 ))
+		out="${out}$(printf '\033[38;2;%d;%d;%dm%s' "$r" "$g" "$b" "$char")"
+	done
+	printf '%s%s' "$out" "$reset"
+}
+
+hsv_to_rgb() {
+	# $1 = hue in degrees (any integer, wrapped mod 360), $2 = saturation
+	# 0-100 (value is always 100/full-bright) -> prints "R G B" (0-255 each).
+	# Used by render_rainbow, which deliberately calls this below 100
+	# saturation: at full saturation, one channel always bottoms out at 0
+	# (pure blue/red/green), which reads as noticeably darker than the
+	# others -- lowering saturation raises that floor so every hue in the
+	# rotation looks comparably bright.
+	awk -v h="$1" -v s="$2" 'BEGIN {
+		h = h % 360; if (h < 0) h += 360
+		s = s / 100
+		hp = h / 60
+		hi = int(hp) % 6
+		f = hp - int(hp)
+		p = 1 - s
+		q = 1 - f * s
+		t = 1 - (1 - f) * s
+		if (hi == 0) { r=1; g=t; b=p }
+		else if (hi == 1) { r=q; g=1; b=p }
+		else if (hi == 2) { r=p; g=1; b=t }
+		else if (hi == 3) { r=p; g=q; b=1 }
+		else if (hi == 4) { r=t; g=p; b=1 }
+		else { r=1; g=p; b=q }
+		printf "%d %d %d", r*255, g*255, b*255
+	}'
+}
+
+render_rainbow() {
+	# $1 = word, $2 = wall-clock seconds.
+	# Rainbow cycle for max: each letter sits at a different point around the
+	# hue wheel, and the whole wheel spins fast with the wall clock -- same
+	# stateless "derive the frame from time" trick as render_shiny. Hue steps
+	# by a non-round 97 degrees/tick (coprime with 360) rather than a clean
+	# divisor, so the sequence doesn't fall into a short, visibly-repeating
+	# loop at only 1 frame/sec.
+	local word="$1" now="$2"
+	local len=${#word} tick hue_offset i char hue rgb r g b rest out=""
+	local sat=65 # <100 -- see hsv_to_rgb -- so every hue stays bright, not just yellow/cyan
+	tick="$now"
+	hue_offset=$(( (tick * 97) % 360 ))
+	for (( i = 0; i < len; i++ )); do
+		char="${word:i:1}"
+		hue=$(( (hue_offset + i * 60) % 360 ))
+		rgb=$(hsv_to_rgb "$hue" "$sat")
+		r=${rgb%% *}
+		rest=${rgb#* }
+		g=${rest%% *}
+		b=${rest#* }
+		out="${out}$(printf '\033[38;2;%d;%d;%dm%s' "$r" "$g" "$b" "$char")"
+	done
+	printf '%s%s' "$out" "$reset"
+}
+
 # ---------------------------------------------------------------------------
 # Line 1 -- Starship-inspired prompt + model, context on the right
 # ---------------------------------------------------------------------------
@@ -234,6 +348,7 @@ done
 
 model_name=$(echo "$input" | jq -r '.model.display_name // empty')
 model_key=$(echo "$input" | jq -r '((.model.id // "") + " " + (.model.display_name // ""))' | tr '[:upper:]' '[:lower:]')
+effort_level=$(echo "$input" | jq -r '.effort.level // empty')
 
 case "$model_key" in
 	*haiku*) model_color="$haiku_color" ;;
@@ -254,10 +369,27 @@ if [ -z "$ctx_used" ] && [ -n "$ctx_tokens" ] && [ -n "$ctx_size" ] && [ "$ctx_s
 	ctx_used=$(awk -v t="$ctx_tokens" -v s="$ctx_size" 'BEGIN { printf "%.2f", (t / s) * 100 }')
 fi
 
-# Right side: model name (colored by tier), then the context ring -- built
-# up piece by piece so either can be absent without leaving a stray space.
+# Right side: model name (colored by tier), then the thinking effort level
+# (dim, when present), then the context ring -- built up piece by piece so
+# any of these can be absent without leaving a stray space.
 line1_right=""
 [ -n "$model_name" ] && line1_right="${model_color}${model_name}${reset}"
+
+if [ -n "$effort_level" ]; then
+	case "$effort_level" in
+		low) effort_rendered="${effort_low_color}${effort_level}${reset}" ;;
+		medium) effort_rendered="${effort_medium_color}${effort_level}${reset}" ;;
+		high) effort_rendered="${effort_high_color}${effort_level}${reset}" ;;
+		xhigh) effort_rendered=$(render_shiny "$effort_level" $effort_xhigh_rgb "$(date +%s)") ;;
+		max) effort_rendered=$(render_rainbow "$effort_level" "$(date +%s)") ;;
+		*) effort_rendered="${dim}${effort_level}${reset}" ;;
+	esac
+	if [ -n "$line1_right" ]; then
+		line1_right="${line1_right} ${effort_rendered}"
+	else
+		line1_right="$effort_rendered"
+	fi
+fi
 
 if [ -n "$ctx_used" ]; then
 	ctx_r=$(printf '%.0f' "$ctx_used")
