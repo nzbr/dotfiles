@@ -178,11 +178,196 @@ fail a hook. Ask the user whether they saw and heard it. If not, the wiring
 is fine and the desktop side is at fault: no notification daemon running, or
 the sound theme is missing.
 
-## 6. Report
+One exception when setting up over SSH: if a relay socket is already live (step
+6) the toast appears on the *client*, not on the machine you are testing from.
+That is a pass, not a failure.
+
+## 6. Offer the SSH notification relay
+
+Only relevant if the user runs Claude Code over SSH — ask if you do not know.
+Skip the whole section otherwise.
+
+On a remote host `notify-send` and `canberra-gtk-play` have nothing to talk to:
+the notification daemon and PipeWire live on the machine the user is sitting
+at. `notify.sh` already handles its half — if a relay socket is present it
+pipes the payload through untouched and exits, and the copy of the script on
+the client routes and renders it. So the remote needs only `bash` and `socat`,
+and all the routing still lives in one `case` statement. What is missing is
+the tunnel and something listening at the far end. Both go on the **client** —
+the machine with the screen — not on the remote.
+
+Do not forward the session bus or the PipeWire socket instead. It needs no
+change to `notify.sh` and is therefore tempting, but a forwarded session bus
+lets the remote start arbitrary apps and user units on the client, and a
+forwarded PipeWire socket reaches the microphone. Forwarding the payload
+grants the remote exactly one power: to show a toast and play a sound.
+
+### 6a. Ask which hosts
+
+List the concrete `Host` entries in `~/.ssh/config` (follow `Include` lines)
+and **ask the user which ones should get the forward**, offering "every host"
+as one of the choices. Do not decide this for them and do not assume every
+entry qualifies — most `Host` blocks are git remotes and jump hosts where
+Claude Code never runs.
+
+Recommend naming hosts individually. `Host *` also works, and a failed remote
+forward is only a warning rather than a fatal error, but it means every `git
+push` and every one-off `ssh` attempts the bind and may print that warning.
+
+### 6b. The ssh config
+
+For each chosen host:
+
+```
+Host devbox
+  RemoteForward /run/user/1000/claude-notify-relay.sock /run/user/1000/claude-notify.sock
+  StreamLocalBindUnlink yes
+```
+
+- Left path = created **on the remote**, and is what `notify.sh` looks for.
+  Right path = where the listener binds **on the client**. The two names differ
+  on purpose; see the comment in `notify.sh`. Never name either one `bus` —
+  combined with `StreamLocalBindUnlink` that would delete a real session bus
+  socket.
+- `StreamLocalBindUnlink yes` clears a socket left behind by a dropped
+  connection, which otherwise blocks every later bind. The cost is
+  last-connection-wins: notifications follow whichever client connected most
+  recently.
+- The remote path is literal — ssh expands no tokens there. If the user's uid
+  differs on that host the path must differ too, so check with
+  `ssh -o BatchMode=yes HOST 'id -u; echo "$XDG_RUNTIME_DIR"'` rather than
+  assuming 1000, and give that host its own entry.
+- If the forward silently never appears, check `AllowStreamLocalForwarding` in
+  the remote's `sshd_config`; it defaults to `yes` but hardened images disable
+  it.
+
+Is `~/.ssh/config` a symlink into a store, or otherwise managed? Then it
+belongs in config management, not in an editor — same rule as step 3. With
+home-manager that is `programs.ssh.matchBlocks.<host>` with `remoteForwards`
+and `extraOptions.StreamLocalBindUnlink = "yes"`. A managed `Include
+~/.ssh/config.d/*` pointing at a writable drop-in directory is the tidy way
+out if one already exists.
+
+### 6c. The listener, on the client
+
+The forward alone does nothing and fails silently, so do not stop at 6b.
+Socket activation is the right shape here: nothing runs while idle, and each
+forwarded payload gets its own short-lived instance.
+
+**First determine whether home-manager manages this machine:**
+
+```bash
+command -v home-manager >/dev/null 2>&1 && echo "home-manager on PATH"
+ls "$HOME/.local/state/nix/profiles" 2>/dev/null | grep -q home-manager && echo "home-manager profile present"
+find "$HOME/.config/systemd/user" -maxdepth 1 -lname '/nix/store/*' -print -quit 2>/dev/null
+```
+
+**If home-manager is in use, the units must be declared there — writing the
+files by hand is not an option.** It owns `~/.config/systemd/user`, deploys
+units as store symlinks, and refuses to clobber a pre-existing plain file, so a
+hand-written unit is both unmanaged drift *and* something that breaks the next
+`home-manager switch`. Add to the home configuration:
+
+```nix
+systemd.user.sockets.claude-notify = {
+  Socket = {
+    ListenStream = "%t/claude-notify.sock";
+    SocketMode = "0600";
+    Accept = true;
+  };
+  Install.WantedBy = [ "sockets.target" ];
+};
+
+systemd.user.services."claude-notify@" = {
+  Unit.Description = "Render a Claude Code notification forwarded from a remote host";
+  Service = {
+    Type = "simple";
+    ExecStart = "${pkgs.bash}/bin/bash %h/.claude/notify.sh";
+    StandardInput = "socket";
+    Environment = [
+      "CLAUDE_NOTIFY_RENDER=1"
+      "DBUS_SESSION_BUS_ADDRESS=unix:path=%t/bus"
+    ];
+  };
+};
+```
+
+Then hand the user `home-manager switch` and let them run it — the activation
+does the `daemon-reload` and enables the socket itself, so there is no manual
+`systemctl` step. Do not run the switch for them: it deploys every other
+pending change in their configuration too, which is theirs to time.
+
+Only on a machine with no such tooling, write the units directly:
+
+`~/.config/systemd/user/claude-notify.socket`
+
+```ini
+[Socket]
+ListenStream=%t/claude-notify.sock
+SocketMode=0600
+Accept=yes
+
+[Install]
+WantedBy=sockets.target
+```
+
+`~/.config/systemd/user/claude-notify@.service`
+
+```ini
+[Unit]
+Description=Render a Claude Code notification forwarded from a remote host
+
+[Service]
+Type=simple
+ExecStart=/bin/bash %h/.claude/notify.sh
+StandardInput=socket
+Environment=CLAUDE_NOTIFY_RENDER=1
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=%t/bus
+```
+
+then `systemctl --user daemon-reload && systemctl --user enable --now
+claude-notify.socket`. Point `ExecStart` at a bash that exists on that machine
+— `/bin/bash` is absent on NixOS.
+
+Two things in the unit that are not decoration: `CLAUDE_NOTIFY_RENDER=1` stops
+the rendering side from forwarding onward, and `DBUS_SESSION_BUS_ADDRESS` is
+set explicitly because a socket-activated user unit does not reliably inherit
+it from the graphical session — without it the toast dies quietly.
+
+Without systemd at all, the same thing as a long-running process:
+
+```bash
+socat UNIX-LISTEN:"$XDG_RUNTIME_DIR/claude-notify.sock",fork,mode=600,unlink-early \
+  SYSTEM:'CLAUDE_NOTIFY_RENDER=1 bash "$HOME/.claude/notify.sh"'
+```
+
+### 6d. Verify
+
+Loopback first — this tests the listener alone, no SSH involved:
+
+```bash
+printf '{"hook_event_name":"Notification","notification_type":"auth_success","message":"relay listener works","title":"Claude Code"}' \
+  | socat -u - UNIX-CONNECT:"$XDG_RUNTIME_DIR/claude-notify.sock"
+```
+
+Then end to end, which also proves the forward and the remote's `socat`:
+
+```bash
+ssh HOST 'printf "{\"notification_type\":\"auth_success\",\"message\":\"relay works from HOST\"}" | bash ~/.claude/notify.sh'
+```
+
+Both must produce a toast **with sound** on the client. Ask the user — the
+whole path is built to swallow errors, so a silent success and a silent
+failure look identical from here. If the loopback works and the end-to-end
+does not, the fault is the tunnel: check that the relay socket exists on the
+remote during a session, and that its path matches what `notify.sh` computes.
+
+## 7. Report
 
 State what changed, what was already correct, and any gap from step 3 —
 with the package that closes it, and whether you installed it or left it to
-the user.
+the user. If step 6 ran, say which hosts got the forward and which were left
+out.
 
 Close with: the statusline appears on the next prompt, but a newly written
 hook is only picked up once Claude Code reloads its config — tell the user to

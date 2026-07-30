@@ -12,8 +12,27 @@
 # service-login         = logged in
 #
 # urgency critical toasts persist until dismissed; normal and low time out.
+#
+# Over SSH the desktop is at the other end of the connection, where neither
+# D-Bus nor PipeWire can be reached from here. If the client forwarded a relay
+# socket in, the payload is handed over untouched and the client's own copy of
+# this script routes and renders it -- so a remote box needs only bash and
+# socat, not libnotify, libcanberra or a sound theme. See the
+# setup-claude-config skill for the ssh and listener side.
 
 payload=$(cat)
+
+# The relay path is deliberately *not* the name the listener binds locally, so
+# a desktop run can never connect to itself; CLAUDE_NOTIFY_RENDER, which the
+# listener sets, is the second guard against a symmetric misconfiguration
+# turning this into a loop.
+relay=${CLAUDE_NOTIFY_RELAY:-${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/claude-notify-relay.sock}
+if [ -z "${CLAUDE_NOTIFY_RENDER:-}" ] && [ -S "$relay" ] && command -v socat >/dev/null 2>&1; then
+  # A socket left behind by a dead tunnel fails to connect -- in that case fall
+  # through and render here, which is right when this is the desktop after all.
+  printf '%s' "$payload" | socat -u - "UNIX-CONNECT:$relay" 2>/dev/null && exit 0
+fi
+
 extract() { printf '%s' "$payload" | jq -r "$1 // empty" 2>/dev/null; }
 
 message=$(extract .message)
