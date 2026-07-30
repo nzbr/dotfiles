@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -e
+git -C ~/.dotfiles pull --rebase --autostash
+git -C ~/.dotfiles submodule update --init --recursive
+redot
