@@ -1,6 +1,6 @@
 ---
 name: setup-claude-config
-description: Use when setting up Claude Code on a new computer, or after the .claude scripts are first deployed to a machine, to wire the status line and desktop notification hook into ~/.claude/settings.json. Also use to repair or re-check that wiring.
+description: Use when setting up Claude Code on a new computer, or after the .claude scripts are first deployed to a machine, to wire the status line, the desktop notification hook, and the subagent model guard into ~/.claude/settings.json. Also use to repair or re-check that wiring.
 ---
 
 # Set up Claude Code's settings.json
@@ -119,14 +119,23 @@ writes to the same file.
 ```bash
 SL='{"type":"command","command":"bash ~/.claude/statusline-command.sh","refreshInterval":1}'
 NH='{"matcher":".*","hooks":[{"type":"command","command":"bash ~/.claude/notify.sh","timeout":10}]}'
+AH=$(cat <<'EOF'
+{"matcher":"Agent","hooks":[{"type":"command","command":"jq -c 'def deny(msg): {hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:msg}}; (.tool_input.model // \"\" | ascii_downcase) as $m | if (.tool_input.subagent_type // \"\") == \"fork\" then deny(\"Blocked: fork subagents ignore model overrides and always run on the parent model, so an explicit model choice is impossible. Use a non-fork subagent_type with an explicit model.\") elif $m == \"\" then deny(\"Blocked: every Agent call must specify an explicit model. Retry the same call with the model parameter set to an appropriate non-Fable model (see CLAUDE.md).\") elif ($m | test(\"fable\")) then deny(\"Blocked: Fable subagents are prohibited (CLAUDE.md). Retry with an explicit non-Fable model.\") else empty end'","statusMessage":"Checking subagent model"}]}
+EOF
+)
 
-jq --argjson sl "$SL" --argjson nh "$NH" '
+jq --argjson sl "$SL" --argjson nh "$NH" --argjson ah "$AH" '
   .statusLine = $sl
   | .hooks = (.hooks // {})
   | .hooks.Notification = (
       ((.hooks.Notification // [])
         | map(select([.hooks[]?.command // ""] | any(test("notify\\.sh")) | not)))
       + [$nh])
+  | .hooks.PreToolUse = (
+      ((.hooks.PreToolUse // [])
+        | map(select((.matcher == "Agent"
+            and ([.hooks[]?.command // ""] | any(test("tool_input\\.model")))) | not)))
+      + [$ah])
 ' "$S" > "$S.new" && mv "$S.new" "$S"
 ```
 
@@ -139,6 +148,18 @@ Why it is shaped that way:
   gets which sound and urgency, and which get nothing at all — lives in the
   `case` statement inside `notify.sh`, one place rather than split across
   matcher regexes. Do not "helpfully" split this back into per-type matchers.
+- `.hooks.PreToolUse` gets the **subagent model guard**: a self-contained
+  `jq` one-liner (no deployed script) that denies any `Agent` tool call that
+  omits an explicit `model`, names a Fable model, or uses
+  `subagent_type: "fork"` (forks ignore model overrides, so an explicit
+  choice is impossible there). It exists because an omitted `model` silently
+  inherits the session model — usually the most expensive one. The deny
+  messages deliberately name no allowed models; which model fits is the
+  caller's decision, guided by the project's CLAUDE.md. Dedupe mirrors the
+  notify.sh entry: any prior Agent-matched entry whose command touches
+  `tool_input.model` is dropped and re-appended, unrelated PreToolUse hooks
+  are preserved. The heredoc is quoted (`<<'EOF'`) on purpose — the payload
+  must reach `jq --argjson` byte-for-byte, with no shell expansion.
 - `.statusLine` is overwritten outright. If it held something different,
   mention that in the report — on a new machine it won't.
 
@@ -154,11 +175,25 @@ jq -e . "$S" >/dev/null && echo "JSON valid"
 jq -e '.statusLine.command' "$S"
 jq -e '.hooks.Notification[] | select(.hooks[]?.command | test("notify\\.sh")) | .matcher' "$S"
 echo "notify.sh hook entries: $(jq '[.hooks.Notification[]? | select(.hooks[]?.command | test("notify\\.sh"))] | length' "$S")"
+echo "agent guard entries: $(jq '[.hooks.PreToolUse[]? | select(.matcher == "Agent" and ([.hooks[]?.command // ""] | any(test("tool_input\\.model"))))] | length' "$S")"
 jq -r 'keys | join(", ")' "$S"
 ```
 
 Expect valid JSON, both selectors printing, exactly **1** notify.sh entry,
-and every pre-existing key still listed.
+exactly **1** agent guard entry, and every pre-existing key still listed.
+
+The subagent model guard can be proven end to end right here — it is pure
+`jq`, so feed it the payloads Claude Code would send:
+
+```bash
+AG=$(jq -r '.hooks.PreToolUse[] | select(.matcher == "Agent") | .hooks[0].command' "$S")
+echo '{"tool_name":"Agent","tool_input":{"prompt":"x"}}'                 | eval "$AG" | grep -q '"deny"' && echo "denies missing model"
+echo '{"tool_name":"Agent","tool_input":{"prompt":"x","model":"fable"}}' | eval "$AG" | grep -q '"deny"' && echo "denies fable"
+echo '{"tool_name":"Agent","tool_input":{"prompt":"x","subagent_type":"fork","model":"sonnet"}}' | eval "$AG" | grep -q '"deny"' && echo "denies fork"
+[ -z "$(echo '{"tool_name":"Agent","tool_input":{"prompt":"x","model":"sonnet"}}' | eval "$AG")" ] && echo "passes explicit model"
+```
+
+All four lines must print.
 
 Then prove the scripts actually run. This matters most on new hardware,
 where an absent notification daemon or sound theme is the likely failure:
