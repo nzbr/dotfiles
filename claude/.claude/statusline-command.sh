@@ -10,7 +10,9 @@
 #   - @hostname (green)        ([hostname] format, styled like the "[@$hostname](fg:green)" segment)
 #   - git branch (orange)      ([git_branch] style = "fg:#FCA17D")
 #   - directory (uncolored)    ([directory] style = "", full path, no truncation)
-#   - usage limits, as progress bars, right after the directory:
+#   - usage limits, as progress bars, right after the directory. The bars
+#     show what is REMAINING (fill and number are 100 - used), but stay
+#     colored by what is USED -- see progress_bar for why:
 #       - Session (5h) limit  <- input.rate_limits.five_hour.used_percentage
 #       - Weekly (7d) limit   <- input.rate_limits.seven_day.used_percentage
 #       - "Fable" limit       <- input.rate_limits.fable.used_percentage IF
@@ -174,10 +176,18 @@ format_tokens() {
 }
 
 progress_bar() {
-	# $1 = rounded integer percentage, $2 = bar width (default 10); colored
-	# via ring_color's gradient, same as the context ring/percentage.
-	local p="$1" width="${2:-10}" c filled empty i bar
-	c=$(ring_color "$p")
+	# $1 = rounded integer USED percentage, $2 = bar width (default 10).
+	# The bar is flipped to the user's perspective: fill and number show
+	# what is REMAINING (100 - used), while the color still tracks USED via
+	# ring_color's gradient -- so a nearly-drained limit shows a short red
+	# "8%" bar rather than a reassuring-green one, and the palette stays
+	# consistent with the context ring, which keeps both showing and
+	# coloring used.
+	local used="$1" width="${2:-10}" p c filled empty i bar
+	[ "$used" -lt 0 ] && used=0
+	[ "$used" -gt 100 ] && used=100
+	c=$(ring_color "$used")
+	p=$(( 100 - used ))
 	filled=$(( (p * width + 50) / 100 ))
 	[ "$filled" -gt "$width" ] && filled="$width"
 	[ "$filled" -lt 0 ] && filled=0
