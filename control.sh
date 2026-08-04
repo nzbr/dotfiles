@@ -167,7 +167,11 @@ function autolink_all {
 	fi
 	autolink picom
 	autolink rofi
-	autolink starship
+	if is_present starship || is_present claude; then
+		link starship
+	else
+		unlink starship
+	fi
 	link scripts # Always link scripts
 	autolink xfce4-session
 	autolink zathura

@@ -5,7 +5,8 @@
 # or the default ~/.config/starship.toml) on the left, usage-limit bars right
 # after the directory, and model + context ring right-aligned on the far
 # right:
-#   - OS icon                  ([os] module, per-distro symbol)
+#   - OS icon                  ([os.symbols], looked up in that config itself
+#                              rather than duplicated here -- see os_symbol)
 #   - username (green/red)     ([username] style_user = fg:green, style_root = fg:red)
 #   - @hostname (green)        ([hostname] format, styled like the "[@$hostname](fg:green)" segment)
 #   - git branch (orange)      ([git_branch] style = "fg:#FCA17D")
@@ -328,19 +329,67 @@ cwd=$(echo "$input" | jqr '.workspace.current_dir // .cwd // empty')
 [ -z "$cwd" ] && cwd="$PWD"
 display_dir="${cwd/#$HOME/~}"
 
-os_icon=""
-if [ -r /etc/os-release ]; then
-	os_id=$(. /etc/os-release 2>/dev/null; echo "$ID")
-	case "$os_id" in
-		fedora) os_icon="" ;;
-		ubuntu) os_icon="" ;;
-		debian) os_icon="" ;;
-		arch) os_icon="" ;;
-		alpine) os_icon="" ;;
-		nixos) os_icon="" ;;
-		*) os_icon="" ;;
-	esac
-fi
+# OS icon -- read out of the Starship config's [os.symbols] table rather than
+# from a second copy of the mapping kept here, so this line and the Starship
+# prompt can never disagree about a distro's symbol, and adding one there is
+# enough. That makes the Starship config a real dependency of this script:
+# autolink_all links the starship package whenever the claude package is
+# linked, even on a machine without starship itself (see control.sh).
+#
+# That table is keyed by Starship's own OS names (from the os_info crate --
+# "NixOS", "openSUSE", "Bluefin"), which are not /etc/os-release ID values, so
+# the lookup tries, case-insensitively: ID, then each word of ID_LIKE, then
+# "Linux", then "Unknown". No ID-to-Starship-name table is needed to bridge
+# the two spellings -- case-insensitive matching covers the ones that differ
+# only in case (nixos -> NixOS, centos -> CentOS), and ID_LIKE covers the
+# rest, which are all derivatives anyway (rhel -> fedora -> Fedora,
+# opensuse-tumbleweed -> opensuse -> openSUSE, bluefin -> fedora if the
+# installed Starship is too old to have a Bluefin symbol).
+#
+# A missing or symbol-less config is not an error: os_icon just comes out
+# empty and the glyph, with its separating space, is left off the line.
+starship_config="${STARSHIP_CONFIG:-$HOME/.config/starship.toml}"
+
+os_symbol() {
+	# $@ = candidate [os.symbols] keys, in priority order -> prints the first
+	# one present in the config, trimmed of the trailing space Starship's
+	# values carry (its own [os] format is a bare "$symbol", so the spacing
+	# lives in the value; here the space is added by core_left instead).
+	[ -r "$starship_config" ] || return 0
+	awk -v candidates="$*" '
+		BEGIN {
+			n = split(tolower(candidates), want, " ")
+			sq = sprintf("%c", 39) # single quote, for TOML literal strings
+		}
+		# Track section headers; only harvest keys inside [os.symbols], and
+		# stop as soon as any other table starts.
+		/^[[:space:]]*\[/ {
+			in_os = ($0 ~ /^[[:space:]]*\[os\.symbols\][[:space:]]*(#.*)?$/)
+			next
+		}
+		!in_os { next }
+		# Name = "glyph" (or a literal-string '\''glyph'\''); trailing comments,
+		# which cannot contain a quote of the same kind, are ignored.
+		match($0, /^[[:space:]]*[A-Za-z0-9_.-]+[[:space:]]*=/) {
+			key = substr($0, 1, RLENGTH - 1)
+			gsub(/[[:space:]]/, "", key)
+			rest = substr($0, RLENGTH + 1)
+			if (match(rest, /"[^"]*"/) || match(rest, sq "[^" sq "]*" sq))
+				sym[tolower(key)] = substr(rest, RSTART + 1, RLENGTH - 2)
+		}
+		END {
+			for (i = 1; i <= n; i++)
+				if (want[i] in sym) { print sym[want[i]]; exit }
+		}
+	' "$starship_config" 2>/dev/null | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//'
+}
+
+os_candidates=""
+[ -r /etc/os-release ] && os_candidates=$(. /etc/os-release 2>/dev/null; echo "$ID $ID_LIKE")
+# Deliberately unquoted: ID_LIKE is a space-separated list and each word is
+# its own candidate.
+# shellcheck disable=SC2086
+os_icon=$(os_symbol $os_candidates Linux Unknown)
 
 if [ "$(id -u)" -eq 0 ]; then
 	user_color="$red"
@@ -458,7 +507,11 @@ case "$model_key" in
 	*) model_color="$dim" ;;
 esac
 
-core_left="${os_icon} ${user_part}${host_part}${git_part} ${display_dir}"
+# The glyph carries its own trailing space so that an absent one (no Starship
+# config, or no symbol for this OS) leaves no stray indent at the line start.
+os_part=""
+[ -n "$os_icon" ] && os_part="${os_icon} "
+core_left="${os_part}${user_part}${host_part}${git_part} ${display_dir}"
 line1_left="$core_left"
 [ -n "$limits_part" ] && line1_left="${line1_left} ${dim}│${reset} ${limits_part}"
 
