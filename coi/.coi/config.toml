@@ -1,0 +1,41 @@
+[container]
+image = "coi-custom"
+
+[container.build]
+script = "build.sh"
+compression = "none"
+
+[paths]
+preserve_workspace_path = true
+
+[defaults.environment]
+BASH_ENV = "/etc/coi/set-environment.sh"
+
+[defaults.env_commands]
+GH_TOKEN = "gh auth token"
+
+[ssh]
+forward_agent = true
+
+[[credentials]]
+host = "~/.config/graphite"
+container = "/home/code/.config/graphite"
+chmod = "0600"
+
+[[mounts.default]]
+host = "/nix/store"
+container = "/nix/store"
+readonly = true
+
+[[mounts.default]]
+host = "~/.claude/projects"
+container = "/home/code/.claude-shared/projects"
+
+[[sockets]]
+host = "/nix/var/nix/daemon-socket/socket"
+container = "/nix/var/nix/daemon-socket/socket"
+
+[[sockets]]
+host = "/run/user/1000/claude-notify.sock"
+container = "/run/user/1000/claude-notify-relay.sock"
+
