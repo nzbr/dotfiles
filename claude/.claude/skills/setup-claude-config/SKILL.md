@@ -320,7 +320,6 @@ systemd.user.services."claude-notify@" = {
     ExecStart = "${pkgs.bash}/bin/bash %h/.claude/notify.sh";
     StandardInput = "socket";
     Environment = [
-      "CLAUDE_NOTIFY_RENDER=1"
       "DBUS_SESSION_BUS_ADDRESS=unix:path=%t/bus"
     ];
   };
@@ -356,7 +355,6 @@ Description=Render a Claude Code notification forwarded from a remote host
 Type=simple
 ExecStart=/bin/bash %h/.claude/notify.sh
 StandardInput=socket
-Environment=CLAUDE_NOTIFY_RENDER=1
 Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=%t/bus
 ```
 
@@ -364,16 +362,20 @@ then `systemctl --user daemon-reload && systemctl --user enable --now
 claude-notify.socket`. Point `ExecStart` at a bash that exists on that machine
 — `/bin/bash` is absent on NixOS.
 
-Two things in the unit that are not decoration: `CLAUDE_NOTIFY_RENDER=1` stops
-the rendering side from forwarding onward, and `DBUS_SESSION_BUS_ADDRESS` is
-set explicitly because a socket-activated user unit does not reliably inherit
-it from the graphical session — without it the toast dies quietly.
+`DBUS_SESSION_BUS_ADDRESS` in the unit is not decoration: a socket-activated
+user unit does not reliably inherit it from the graphical session, and without
+it the toast dies quietly.
+
+Nothing stops the listener forwarding onward, which is deliberate. A host that
+both listens and has a relay socket of its own is a hop: it hands the payload
+to the next tunnel instead of rendering, so a notification can cross a chain of
+machines. The differing socket names are what keep it from feeding itself.
 
 Without systemd at all, the same thing as a long-running process:
 
 ```bash
 socat UNIX-LISTEN:"$XDG_RUNTIME_DIR/claude-notify.sock",fork,mode=600,unlink-early \
-  SYSTEM:'CLAUDE_NOTIFY_RENDER=1 bash "$HOME/.claude/notify.sh"'
+  SYSTEM:'bash "$HOME/.claude/notify.sh"'
 ```
 
 ### 6d. Verify
