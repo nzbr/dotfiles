@@ -15,12 +15,13 @@ curl -sS https://starship.rs/install.sh | sh -s -- --yes
 
 # Nix
 mkdir -p /nix/store /nix/var/nix/daemon-socket /etc/nix
-cat >/etc/nix/nix.conf <<EOF
+cat >/etc/nix/nix.conf <<'EOF'
 auto-optimise-store = true
 experimental-features = nix-command flakes
 extra-nix-path = nixpkgs=flake:nixpkgs
 max-jobs = auto
 ssl-cert-file = /etc/ssl/certs/ca-certificates.crt
+bash-prompt-prefix = (nix:$name)\040
 
 extra-substituters = https://nzbr-nix-cache.s3.eu-central-1.wasabisys.com
 extra-trusted-public-keys = nzbr-nix-cache.s3.eu-central-1.wasabisys.com:3BzCCe4Frvvwamd5wibtMAcEKwbVs4y2xKUR2vQ8gIo=
