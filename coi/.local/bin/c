@@ -1,8 +1,8 @@
 #!/bin/bash
 # vim: syntax=sh
-# Attach to the coi session of the current directory, or start a new one.
-# Arguments are passed to `coi shell`, so they only apply when no session
-# is running yet.
+# Attach to the coi container of the current directory, or start a new one.
+# Arguments are passed to `coi shell`, so they only apply when a new session
+# is started.
 set -euo pipefail
 
 workspace="$(pwd -P)"
@@ -10,24 +10,35 @@ workspace="$(pwd -P)"
 # coi reports the workspace as it was resolved when the session started, which
 # may or may not have gone through the /home -> /var/home symlink, so compare
 # canonicalized paths instead of the strings.
-sessions=()
+containers=()
 while IFS=$'\t' read -r ws name; do
 	[ -n "$name" ] || continue
 	[ "$(realpath -m -- "$ws")" == "$workspace" ] || continue
-	sessions+=("$name")
+	containers+=("$name")
 done < <(
 	coi list --format json |
-		jq -r '.active_containers[]? | select((.status // "" | ascii_downcase) == "running") | [.workspace, .name] | @tsv'
+		jq -r '.active_containers[]? | [.workspace, .name] | @tsv'
 )
 
-if [ ${#sessions[@]} -gt 0 ]; then
-	if [ ${#sessions[@]} -gt 1 ]; then
-		echo "Multiple sessions for this workspace (${sessions[*]}), attaching to ${sessions[0]}" >&2
+if [ ${#containers[@]} -gt 0 ]; then
+	container="${containers[0]}"
+	if [ ${#containers[@]} -gt 1 ]; then
+		echo "Multiple containers for this workspace (${containers[*]}), using $container" >&2
 	fi
 	if [ $# -gt 0 ]; then
-		echo "Attaching to a running session, ignoring arguments: $*" >&2
+		echo "Arguments only apply when a new session is started: $*" >&2
 	fi
-	exec coi attach "${sessions[0]}"
+
+	if coi attach "$container"; then
+		exit 0
+	fi
+
+	# Falling through to `coi shell` here would leave the broken container
+	# behind and start a second one in the next slot, which is never what I
+	# want from this script; ask to get rid of it instead.
+	read -r -p "Cannot attach to $container. Shut it down and start a new session? [y/N] " reply
+	[[ "$reply" =~ ^[Yy] ]] || exit 1
+	coi shutdown --force "$container"
 fi
 
 exec coi shell "$@"
