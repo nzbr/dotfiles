@@ -39,6 +39,15 @@ warn_timeout = "300s"
 prefix = ["/"]
 EOF
 
+# mise
+# The base image activates it from /etc/profile.d/mise.sh, ~/.bashrc and ~/.profile,
+# all of which run after our hook, and its prompt hook re-prepends the tool dirs on
+# every prompt -- so its python won over the dev shell's. Toolchains come from nix
+# here, so rip mise out instead of trying to out-order it.
+rm -f /usr/local/bin/mise /etc/profile.d/mise.sh
+sed -i '/mise/d' /home/code/.bashrc /home/code/.profile
+rm -rf /home/code/.local/share/mise /home/code/.config/mise
+
 # Shell init hook
 mkdir -p /etc/coi
 cat >/etc/coi/set-environment.sh <<'EOF'
@@ -47,12 +56,6 @@ cat >/etc/coi/set-environment.sh <<'EOF'
 if [ -z "${HOME:-}" ]; then
   HOME=$(getent passwd "$(id -u)" 2>/dev/null | cut -d: -f6)
   [ -n "$HOME" ] && export HOME
-fi
-
-# mise first, so the flake's toolchain wins for anything both provide (e.g. node).
-# --shims is the documented non-interactive form; plain `activate` installs a chpwd hook.
-if command -v mise >/dev/null 2>&1; then
-  eval "$(mise activate --shims bash 2>/dev/null)" >/dev/null 2>&1 || true
 fi
 
 eval "$(direnv hook bash)" || true
