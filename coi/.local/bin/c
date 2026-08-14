@@ -29,11 +29,14 @@ if [ ${#containers[@]} -gt 0 ]; then
 		echo "Arguments only apply when a new session is started: $*" >&2
 	fi
 
-	if coi attach "$container"; then
-		exit 0
+	# `coi attach` prints "no tmux session found" and still exits 0, so ask
+	# tmux itself whether there is anything to attach to. Its sessions are
+	# named after their container.
+	if coi tmux list --format json | jq -e --arg c "$container" 'any(.[]; .container == $c)' >/dev/null; then
+		exec coi attach "$container"
 	fi
 
-	# Falling through to `coi shell` here would leave the broken container
+	# Falling through to `coi shell` here would leave the dead container
 	# behind and start a second one in the next slot, which is never what I
 	# want from this script; ask to get rid of it instead.
 	read -r -p "Cannot attach to $container. Shut it down and start a new session? [y/N] " reply
