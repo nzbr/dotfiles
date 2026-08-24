@@ -62,7 +62,7 @@
 # ---------------------------------------------------------------------------
 # Which rendering the usage limits get:
 #
-#   bar    a ten-cell battery plus the number      "▐██████░░░░🬛 63%"
+#   bar    a ten-cell battery plus the number      "▐██████    🬛 63%"
 #   icon   one Material Design battery glyph plus the number   "󰁿 63%"
 #
 # The bar resolves the charge to ten cells; the icon says the same thing in
@@ -92,6 +92,7 @@ green=$'\033[32m'
 red=$'\033[31m'
 yellow=$'\033[33m'
 orange=$'\033[38;2;252;161;125m' # matches starship.toml's [git_branch] #FCA17D
+track_bg=$'\033[48;2;78;78;78m'  # gray #4E4E4E -- battery_bar's drained cells
 
 # Model-tier colors, distinct at a glance:
 haiku_color=$'\033[38;2;126;231;200m'  # teal   #7EE7C8 -- small/fast model
@@ -204,7 +205,7 @@ battery_bar() {
 	# casing (default 10). Used when LIMIT_STYLE is "bar".
 	#
 	# Drawn as a battery: a casing wall on each side of the cells, e.g.
-	# "▐██████░░░░🬛 63%". Each wall puts its ink on the half of its cell
+	# "▐██████    🬛 63%". Each wall puts its ink on the half of its cell
 	# that faces the charge -- ▐ (right half block) fills its right half,
 	# 🬛 fills its left half -- so the casing butts straight against the
 	# charge with no gap. Box-drawing walls (┃, or ┣/╋) can't do that:
@@ -232,6 +233,11 @@ battery_bar() {
 	# The casing itself stays dim instead of taking the gradient color, so
 	# it reads as an inert shell and only the charge inside carries the
 	# color signal.
+	#
+	# Drained cells are blank cells on a gray background (track_bg) rather
+	# than dim ░ glyphs: the charge then ends on a hard edge instead of
+	# fading into a second texture, and an exhausted limit reads as an
+	# empty track instead of a full bar of stipple.
 	local used="$1" width="${2:-10}" p c filled empty i cells
 	[ "$used" -lt 0 ] && used=0
 	[ "$used" -gt 100 ] && used=100
@@ -244,12 +250,12 @@ battery_bar() {
 	cells=""
 	for ((i = 0; i < filled; i++)); do cells+="█"; done
 	local cells_empty=""
-	for ((i = 0; i < empty; i++)); do cells_empty+="░"; done
+	for ((i = 0; i < empty; i++)); do cells_empty+=" "; done
 	local wall_l="${dim}▐${reset}" wall_r="${dim}🬛${reset}"
 	printf "%s%s%s%s%s%s%s %s%s%%%s" \
 		"$wall_l" \
 		"$c" "$cells" \
-		"$dim" "$cells_empty" "$reset" \
+		"$track_bg" "$cells_empty" "$reset" \
 		"$wall_r" \
 		"$c" "$p" "$reset"
 }
