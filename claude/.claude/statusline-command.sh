@@ -2,8 +2,8 @@
 # Claude Code statusline.
 #
 # Single line, styled after the user's Starship prompt (see $STARSHIP_CONFIG,
-# or the default ~/.config/starship.toml) on the left, usage-limit bars right
-# after the directory, and model + context ring right-aligned on the far
+# or the default ~/.config/starship.toml) on the left, usage-limit batteries
+# right after the directory, and model + context ring right-aligned on the far
 # right:
 #   - OS icon                  ([os.symbols], looked up in that config itself
 #                              rather than duplicated here -- see os_symbol)
@@ -11,9 +11,12 @@
 #   - @hostname (green)        ([hostname] format, styled like the "[@$hostname](fg:green)" segment)
 #   - git branch (orange)      ([git_branch] style = "fg:#FCA17D")
 #   - directory (uncolored)    ([directory] style = "", full path, no truncation)
-#   - usage limits, as progress bars, right after the directory. The bars
-#     show what is REMAINING (fill and number are 100 - used), but stay
-#     colored by what is USED -- see progress_bar for why:
+#   - usage limits, drawn as batteries, right after the directory. Each
+#     one shows what is REMAINING (charge and number are 100 - used), but
+#     stays colored by what is USED -- see battery_bar for why. Two
+#     renderings exist, a ten-cell bar and a single icon, and by default
+#     the widest one that fits the terminal is used -- see LIMIT_STYLE
+#     below and the layout block at the end.
 #       - Session (5h) limit  <- input.rate_limits.five_hour.used_percentage
 #       - Weekly (7d) limit   <- input.rate_limits.seven_day.used_percentage
 #       - "Fable" limit       <- input.rate_limits.fable.used_percentage IF
@@ -55,6 +58,26 @@
 #     harmless forward-compatible check and will simply stay hidden unless
 #     Anthropic adds such a field in the future. Do not mistake its
 #     appearance for confirmation that it currently works.
+
+# ---------------------------------------------------------------------------
+# Which rendering the usage limits get:
+#
+#   bar    a ten-cell battery plus the number      "▐██████░░░░🬛 63%"
+#   icon   one Material Design battery glyph plus the number   "󰁿 63%"
+#
+# The bar resolves the charge to ten cells; the icon says the same thing in
+# roughly eleven columns less, at ten-percent steps.
+#
+#   auto   bars while they fit, icons once they don't  (the default)
+#
+# "auto" is what makes the line responsive. The layout block at the end of
+# this script walks the styles in that order and keeps the first that fits,
+# so the batteries are narrowed before the line is split in two, and only
+# then are they narrowed again on the split line -- see there. Pinning this
+# to "bar" or "icon" just drops the other from that ladder; it does not
+# disable the splitting, which is the last resort either way.
+# ---------------------------------------------------------------------------
+LIMIT_STYLE="auto"
 
 # Force a plain '.' decimal separator for printf/awk regardless of the
 # invoking environment's locale (e.g. de_DE uses ',' and would make
@@ -176,15 +199,40 @@ format_tokens() {
 	fi
 }
 
-progress_bar() {
-	# $1 = rounded integer USED percentage, $2 = bar width (default 10).
-	# The bar is flipped to the user's perspective: fill and number show
-	# what is REMAINING (100 - used), while the color still tracks USED via
-	# ring_color's gradient -- so a nearly-drained limit shows a short red
-	# "8%" bar rather than a reassuring-green one, and the palette stays
-	# consistent with the context ring, which keeps both showing and
-	# coloring used.
-	local used="$1" width="${2:-10}" p c filled empty i bar
+battery_bar() {
+	# $1 = rounded integer USED percentage, $2 = number of cells inside the
+	# casing (default 10). Used when LIMIT_STYLE is "bar".
+	#
+	# Drawn as a battery: a casing wall on each side of the cells, e.g.
+	# "▐██████░░░░🬛 63%". Each wall puts its ink on the half of its cell
+	# that faces the charge -- ▐ (right half block) fills its right half,
+	# 🬛 fills its left half -- so the casing butts straight against the
+	# charge with no gap. Box-drawing walls (┃, or ┣/╋) can't do that:
+	# they draw down the centre of their cell, so they either leave a
+	# half-cell of dead space or have to bridge it with an inward stub.
+	#
+	# 🬛 also fills the middle-right sixth of its cell, and that sixth is
+	# the positive terminal: it protrudes away from the battery only,
+	# never inward, and costs no column of its own. It is U+1FB1B BLOCK
+	# SEXTANT-1345, from Symbols for Legacy Computing -- much thinner on
+	# the ground than box drawing, but the font here is CopperflameMono,
+	# an Iosevka build patched with Nerd Fonts, and Iosevka draws that
+	# whole sextant range (font/default.nix in nzbr/copperflame, and
+	# symbol/mosaic/teletext.ptl in be5invis/Iosevka).
+	#
+	# The charge is flipped to the user's perspective: the cells and the
+	# number show what is REMAINING (100 - used), while the color still
+	# tracks USED via ring_color's gradient -- so a nearly-drained limit
+	# shows a short red "8%" battery rather than a reassuring-green one, and
+	# the palette stays consistent with the context ring, which keeps both
+	# showing and coloring used. Reading the two together still lands on
+	# the battery convention at the end that matters: nearly empty is
+	# red.
+	#
+	# The casing itself stays dim instead of taking the gradient color, so
+	# it reads as an inert shell and only the charge inside carries the
+	# color signal.
+	local used="$1" width="${2:-10}" p c filled empty i cells
 	[ "$used" -lt 0 ] && used=0
 	[ "$used" -gt 100 ] && used=100
 	c=$(ring_color "$used")
@@ -193,11 +241,121 @@ progress_bar() {
 	[ "$filled" -gt "$width" ] && filled="$width"
 	[ "$filled" -lt 0 ] && filled=0
 	empty=$(( width - filled ))
-	bar=""
-	for ((i = 0; i < filled; i++)); do bar+="█"; done
-	local bar_empty=""
-	for ((i = 0; i < empty; i++)); do bar_empty+="░"; done
-	printf "%s%s%s%s%s %s%s%%%s" "$c" "$bar" "$dim" "$bar_empty" "$reset" "$c" "$p" "$reset"
+	cells=""
+	for ((i = 0; i < filled; i++)); do cells+="█"; done
+	local cells_empty=""
+	for ((i = 0; i < empty; i++)); do cells_empty+="░"; done
+	local wall_l="${dim}▐${reset}" wall_r="${dim}🬛${reset}"
+	printf "%s%s%s%s%s%s%s %s%s%%%s" \
+		"$wall_l" \
+		"$c" "$cells" \
+		"$dim" "$cells_empty" "$reset" \
+		"$wall_r" \
+		"$c" "$p" "$reset"
+}
+
+battery_icon() {
+	# $1 = rounded integer USED percentage. Used when LIMIT_STYLE is "icon".
+	#
+	# One Material Design battery glyph plus the remaining percentage, e.g.
+	# "󰁿 63%" -- the compact alternative to battery_bar, which see for why
+	# the number is what is REMAINING while the color still tracks what is
+	# USED. Thirteen states, more than any other Nerd Font battery set:
+	# full, 90 down to 10 in tens, then three separate stages for the last
+	# tenth, where knowing how close the limit is matters most -- an empty
+	# outline at 5-9%, the exclamation-mark battery at 1-4%, and the
+	# struck-through one at 0. (Font Awesome's batteries lie down, which
+	# would match the bar's orientation better than these upright ones, but
+	# it has five states in total and no alert glyph at all.)
+	#
+	# Levels floor to their ten rather than rounding to the nearest, so a
+	# glyph always means "at least this much left" and only a genuinely
+	# untouched limit shows as full.
+	local used="$1" p c glyph
+	[ "$used" -lt 0 ] && used=0
+	[ "$used" -gt 100 ] && used=100
+	c=$(ring_color "$used")
+	p=$(( 100 - used ))
+	if [ "$p" -eq 0 ]; then
+		glyph=$'\U000f125e' # nf-md-battery_off_outline            (0%, struck out)
+	elif [ "$p" -lt 5 ]; then
+		# The _variant_outline alert rather than plain nf-md-battery_alert:
+		# that one draws a *filled* battery around its "!", which reads as a
+		# charged battery at exactly the moment the limit is nearly gone.
+		glyph=$'\U000f10cd' # nf-md-battery_alert_variant_outline  (1-4%)
+	elif [ "$p" -lt 10 ]; then
+		glyph=$'\U000f008e' # nf-md-battery_outline                (5-9%)
+	else
+		case $(( p / 10 )) in
+			1) glyph=$'\U000f007a' ;; # nf-md-battery_10
+			2) glyph=$'\U000f007b' ;; # nf-md-battery_20
+			3) glyph=$'\U000f007c' ;; # nf-md-battery_30
+			4) glyph=$'\U000f007d' ;; # nf-md-battery_40
+			5) glyph=$'\U000f007e' ;; # nf-md-battery_50
+			6) glyph=$'\U000f007f' ;; # nf-md-battery_60
+			7) glyph=$'\U000f0080' ;; # nf-md-battery_70
+			8) glyph=$'\U000f0081' ;; # nf-md-battery_80
+			9) glyph=$'\U000f0082' ;; # nf-md-battery_90
+			*) glyph=$'\U000f0079' ;; # nf-md-battery         (full, 100%)
+		esac
+	fi
+	printf "%s%s %s%%%s" "$c" "$glyph" "$p" "$reset"
+}
+
+limit_gauge() {
+	# $1 = style, $2 = rounded integer USED percentage. Draws one limit in
+	# the style asked for -- anything that is not "bar" is an icon. Every
+	# gauge goes through here, which is what keeps the two renderings
+	# interchangeable enough for the layout block to price up both.
+	case "$1" in
+		bar) battery_bar "$2" ;;
+		*) battery_icon "$2" ;;
+	esac
+}
+
+# The next two build the left-hand side of the line in a given style. They
+# read the per-limit values (session_pct, s_r, session_reset_part, ...) and
+# core_left out of the linear part of the script further down, so they are
+# only callable from the layout block at the very end -- but they live up
+# here with the other functions. They exist as functions rather than as a
+# string built once because "auto" has to measure both styles before it can
+# choose one.
+
+build_limits() {
+	# $1 = style -> the whole run of usage limits in that style, joined with
+	# the same dim separator the rest of the line uses. Empty when this
+	# Claude Code build reported no limits at all.
+	local style="$1" segs=() part="" first=true seg
+	if [ -n "$session_pct" ]; then
+		segs+=("${dim}Session${reset} ${session_reset_part}$(limit_gauge "$style" "$s_r")")
+	fi
+	if [ -n "$weekly_pct" ]; then
+		segs+=("${dim}Week${reset} ${weekly_reset_part}$(limit_gauge "$style" "$w_r")")
+	fi
+	if [ -n "$fable_pct" ]; then
+		segs+=("${dim}Fable${reset} $(limit_gauge "$style" "$f_r")")
+	fi
+	for seg in "${segs[@]}"; do
+		if $first; then
+			part="$seg"
+			first=false
+		else
+			part="${part} ${dim}│${reset} ${seg}"
+		fi
+	done
+	printf '%s' "$part"
+}
+
+compose_left() {
+	# $1 = style -> the core prompt plus the usage limits in that style,
+	# i.e. everything that sits left of the right-aligned block.
+	local limits
+	limits=$(build_limits "$1")
+	if [ -n "$limits" ]; then
+		printf '%s %s│%s %s' "$core_left" "$dim" "$reset" "$limits"
+	else
+		printf '%s' "$core_left"
+	fi
 }
 
 render_shiny() {
@@ -292,8 +450,8 @@ render_rainbow() {
 # statusline (see the very end of the script) instead of letting the
 # affected segments silently blank out with no indication why -- this is
 # exactly what happened when `jq` turned out to be missing on PATH: every
-# JSON-derived field (rate-limit bars, model name, context ring) vanished at
-# once with nothing to explain it. Add to REQUIRED_COMMANDS if a future
+# JSON-derived field (rate-limit batteries, model name, context ring) vanished
+# at once with nothing to explain it. Add to REQUIRED_COMMANDS if a future
 # change introduces a new external tool dependency.
 #
 # `stty`/`tput` (terminal-width detection) are deliberately NOT in this
@@ -406,15 +564,13 @@ if git --no-optional-locks -C "$cwd" rev-parse --is-inside-work-tree >/dev/null 
 	[ -n "$branch" ] && git_part=" ${orange}${branch}${reset}"
 fi
 
-# Claude Code usage limits, as progress bars, shown right after the directory.
+# Claude Code usage limits, as batteries, shown right after the directory.
 session_pct=$(echo "$input" | jqr '.rate_limits.five_hour.used_percentage // empty')
 session_resets_at=$(echo "$input" | jqr '.rate_limits.five_hour.resets_at // empty')
 weekly_pct=$(echo "$input" | jqr '.rate_limits.seven_day.used_percentage // empty')
 weekly_resets_at=$(echo "$input" | jqr '.rate_limits.seven_day.resets_at // empty')
 # Speculative/forward-compatible only -- see header note above. Empty today.
 fable_pct=$(echo "$input" | jqr '.rate_limits.fable.used_percentage // empty')
-
-limit_segments=()
 
 if [ -n "$session_pct" ]; then
 	s_r=$(printf '%.0f' "$session_pct")
@@ -448,7 +604,6 @@ if [ -n "$session_pct" ]; then
 		fi
 	fi
 
-	limit_segments+=("${dim}Session${reset} ${session_reset_part}$(progress_bar "$s_r")")
 fi
 
 if [ -n "$weekly_pct" ]; then
@@ -476,24 +631,11 @@ if [ -n "$weekly_pct" ]; then
 		fi
 	fi
 
-	limit_segments+=("${dim}Week${reset} ${weekly_reset_part}$(progress_bar "$w_r")")
 fi
 
 if [ -n "$fable_pct" ]; then
 	f_r=$(printf '%.0f' "$fable_pct")
-	limit_segments+=("${dim}Fable${reset} $(progress_bar "$f_r")")
 fi
-
-limits_part=""
-first=true
-for seg in "${limit_segments[@]}"; do
-	if $first; then
-		limits_part="$seg"
-		first=false
-	else
-		limits_part="${limits_part} ${dim}│${reset} ${seg}"
-	fi
-done
 
 model_name=$(echo "$input" | jqr '.model.display_name // empty')
 model_key=$(echo "$input" | jqr '((.model.id // "") + " " + (.model.display_name // ""))' | tr '[:upper:]' '[:lower:]')
@@ -512,8 +654,6 @@ esac
 os_part=""
 [ -n "$os_icon" ] && os_part="${os_icon} "
 core_left="${os_part}${user_part}${host_part}${git_part} ${display_dir}"
-line1_left="$core_left"
-[ -n "$limits_part" ] && line1_left="${line1_left} ${dim}│${reset} ${limits_part}"
 
 ctx_tokens=$(echo "$input" | jqr '.context_window.total_input_tokens // empty')
 ctx_size=$(echo "$input" | jqr '.context_window.context_window_size // empty')
@@ -558,67 +698,108 @@ if [ -n "$ctx_used" ]; then
 	fi
 fi
 
+line1=""
 line2=""
 
-if [ -n "$line1_right" ]; then
-	term_width="${COLUMNS:-}"
-	[ -z "$term_width" ] && term_width=$(stty size < /dev/tty 2>/dev/null | awk '{print $2}')
-	[ -z "$term_width" ] && term_width=$(tput cols 2>/dev/null)
-	[ -z "$term_width" ] && term_width=80
+term_width="${COLUMNS:-}"
+[ -z "$term_width" ] && term_width=$(stty size < /dev/tty 2>/dev/null | awk '{print $2}')
+[ -z "$term_width" ] && term_width=$(tput cols 2>/dev/null)
+[ -z "$term_width" ] && term_width=80
 
-	# Safety margin: Claude Code's own UI chrome (borders/indicators) can eat
-	# a few columns beyond the raw terminal width we're able to detect from
-	# this subprocess, so don't push all the way to the reported edge.
-	term_width=$(( term_width - 4 ))
-	[ "$term_width" -lt 20 ] && term_width=20
+# Safety margin: Claude Code's own UI chrome (borders/indicators) can eat
+# a few columns beyond the raw terminal width we're able to detect from
+# this subprocess, so don't push all the way to the reported edge.
+term_width=$(( term_width - 4 ))
+[ "$term_width" -lt 20 ] && term_width=20
 
-	left_len=$(vis_len "$line1_left")
-	right_len=$(vis_len "$line1_right")
-	pad=$(( term_width - left_len - right_len ))
+# The styles to try, widest first. "auto" gets both, so a narrowing terminal
+# swaps the bars for icons; pinning LIMIT_STYLE leaves a one-entry ladder,
+# which every loop below still walks correctly, it just never has a second
+# option to fall back to.
+case "$LIMIT_STYLE" in
+	bar) style_ladder=(bar) ;;
+	icon) style_ladder=(icon) ;;
+	*) style_ladder=(bar icon) ;;
+esac
+narrowest_style="${style_ladder[-1]}"
 
-	if [ "$pad" -lt 1 ]; then
-		# Not enough room to fit everything on one line -- instead of
-		# risking clipping/overflow against Claude Code's own UI chrome,
-		# move everything from the session-limit bar onward (rate-limit
-		# bars, then model/effort/context ring) down to its own second
-		# line, leaving line1 as just the core left-hand side (icon,
-		# user@host, git branch, directory -- no rate-limit bars).
-		line1="$core_left"
-		if [ -n "$limits_part" ]; then
-			# Right-align line1_right against the terminal edge on line2
-			# too -- same term_width and the same vis_len-based spacer math
-			# as the line1_left/line1_right split above, just with
-			# limits_part standing in for line1_left as the left anchor.
-			limits_len=$(vis_len "$limits_part")
-			right_len2=$(vis_len "$line1_right")
-			pad2=$(( term_width - limits_len - right_len2 ))
-			if [ "$pad2" -lt 1 ]; then
-				# Even line2 alone doesn't fit -- same single-space
-				# fallback the pre-split single-line path used to fall
-				# back to in this situation.
-				line2="${limits_part} ${line1_right}"
-			else
-				spacer2=$(printf '%*s' "$pad2" '')
-				line2="${limits_part}${spacer2}${line1_right}"
-			fi
-		else
-			line2="$line1_right"
+fit_lr() {
+	# $1 = left, $2 = right -> the two spaced out to exactly term_width,
+	# with the right block flush against the edge. Prints nothing and
+	# fails if they cannot both fit, which is how the callers below test a
+	# candidate layout: assign the output, and let the exit status say
+	# whether the candidate was usable.
+	local l="$1" r="$2" pad
+	pad=$(( term_width - $(vis_len "$l") - $(vis_len "$r") ))
+	[ "$pad" -lt 1 ] && return 1
+	printf '%s%*s%s' "$l" "$pad" '' "$r"
+}
+
+if [ -z "$line1_right" ]; then
+	# Nothing to right-align, so there is nothing to displace onto a second
+	# line either -- the only lever left is how wide the batteries are.
+	for style in "${style_ladder[@]}"; do
+		candidate=$(compose_left "$style")
+		if [ "$(vis_len "$candidate")" -le "$term_width" ]; then
+			line1="$candidate"
+			break
 		fi
-	else
-		spacer=$(printf '%*s' "$pad" '')
-		line1="${line1_left}${spacer}${line1_right}"
-	fi
+	done
+	[ -z "$line1" ] && line1=$(compose_left "$narrowest_style")
 else
-	line1="$line1_left"
+	# Degrade in a fixed order, each step giving up less than the next:
+	#
+	#   1. one line, full-size bars
+	#   2. one line, icons                 <- narrow the batteries first...
+	#   3. two lines, full-size bars       <- ...and only then split
+	#   4. two lines, icons
+	#   5. two lines, icons, overflowing
+	#
+	# Splitting is treated as the more expensive concession because it
+	# costs a whole row of the user's terminal, while swapping a bar for an
+	# icon only costs resolution (ten cells become ten-percent steps) and
+	# nothing else -- the label, the countdown, the exact percentage and
+	# the color all survive the swap. Step 3 then re-tries the bars on the
+	# split line, because a line carrying only the limits and the
+	# right-hand block has far more room than one that also carries the
+	# directory, and there is no reason to keep paying for the icons once
+	# that room exists.
+	for style in "${style_ladder[@]}"; do
+		if candidate=$(fit_lr "$(compose_left "$style")" "$line1_right"); then
+			line1="$candidate"
+			break
+		fi
+	done
+
+	if [ -z "$line1" ]; then
+		# Nothing fit on one line. line1 keeps just the core left-hand side
+		# (OS icon, user@host, git branch, directory) and everything from
+		# the limits onward moves down, still right-aligned against the
+		# same edge.
+		line1="$core_left"
+		for style in "${style_ladder[@]}"; do
+			if candidate=$(fit_lr "$(build_limits "$style")" "$line1_right"); then
+				line2="$candidate"
+				break
+			fi
+		done
+		# Even a line of its own is not enough: emit the narrowest style
+		# with a single space and let it run long, rather than clipping.
+		[ -z "$line2" ] && line2="$(build_limits "$narrowest_style") ${line1_right}"
+		# ...with the leading space trimmed when there were no limits at
+		# all to put in front of it.
+		line2="${line2# }"
+	fi
 fi
 
 # ---------------------------------------------------------------------------
 # Assemble final output -- up to three lines, in order:
 #   1. dependency warning (only when something's missing, see top of script)
-#   2. line1 (core left side, plus rate-limit bars/model/effort/context ring
-#      when everything fit on one line)
-#   3. line2 (only when the terminal was too narrow to fit it all on line1 --
-#      see the width check above; carries the rate-limit bars onward)
+#   2. line1 (core left side, plus rate-limit batteries/model/effort/context
+#      ring when everything fit on one line)
+#   3. line2 (only when even icon-style batteries could not fit it all on
+#      line1 -- see the degradation ladder above; carries the rate-limit
+#      batteries onward)
 # Built as an array and joined with '\n' so any combination of
 # warning/line2 being present or absent still composes correctly, and the
 # plain case (no warning, no line2) stays byte-for-byte a single `line1`.
