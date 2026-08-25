@@ -48,6 +48,14 @@ rm -f /usr/local/bin/mise /etc/profile.d/mise.sh
 sed -i '/mise/d' /home/code/.bashrc /home/code/.profile
 rm -rf /home/code/.local/share/mise /home/code/.config/mise
 
+# tmux
+# The image's /etc/tmux.conf leaves terminal-features unset, so tmux assumes the
+# outer terminal is 256-color and quantizes every truecolor sequence that passes
+# through it. The per-user file is loaded after /etc/tmux.conf, so this wins.
+cat >/home/code/.tmux.conf <<'EOF'
+set -as terminal-features ",*:RGB"
+EOF
+
 # Shell init hook
 mkdir -p /etc/coi
 cat >/etc/coi/set-environment.sh <<'EOF'
