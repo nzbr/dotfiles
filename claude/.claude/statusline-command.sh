@@ -382,12 +382,15 @@ build_limits() {
 	# and a clock on a calendar for the seven days. Both carry a clock face,
 	# so the pair reads as one idea at two scales -- the near window and the
 	# far one -- where an hourglass next to a refresh arrow would be two
-	# unrelated metaphors sharing a line. They stay dim like the words they
-	# replace, because the gauge beside them is what should catch the eye,
-	# and they are glyphs in both styles rather than only the cramped one:
-	# nine columns is worth having even on a line that could afford the
-	# words. "Fable" is a model name rather than a window, so nothing
-	# pictorial says it; that one keeps a letter.
+	# unrelated metaphors sharing a line. They are glyphs in both styles
+	# rather than only the cramped one: nine columns is worth having even on
+	# a line that could afford the words. "Fable" is a model name rather
+	# than a window, so nothing pictorial says it; that one keeps a letter.
+	#
+	# Labels and countdowns carry no color of their own, like the path.
+	# Claude Code renders the whole line a shade down already, and a dim of
+	# our own on top of that flattened them into the background rather than
+	# merely quieting them.
 	local s_label=$'\U000f06b0' # nf-md-update
 	local w_label=$'\U000f16e1' # nf-md-calendar_clock_outline
 	local f_label="F"
@@ -402,13 +405,13 @@ build_limits() {
 		w_reset="$weekly_reset_short"
 	fi
 	if [ -n "$session_pct" ]; then
-		segs+=("${dim}${s_label}${reset} ${session_reset_part}$(limit_gauge "$style" "$s_r")")
+		segs+=("${s_label} ${session_reset_part}$(limit_gauge "$style" "$s_r")")
 	fi
 	if [ -n "$weekly_pct" ]; then
-		segs+=("${dim}${w_label}${reset} ${w_reset}$(limit_gauge "$style" "$w_r")")
+		segs+=("${w_label} ${w_reset}$(limit_gauge "$style" "$w_r")")
 	fi
 	if [ -n "$fable_pct" ]; then
-		segs+=("${dim}${f_label}${reset} $(limit_gauge "$style" "$f_r")")
+		segs+=("${f_label} $(limit_gauge "$style" "$f_r")")
 	fi
 	for seg in "${segs[@]}"; do
 		if $first; then
@@ -750,7 +753,7 @@ if [ -n "$session_pct" ]; then
 	s_r=$(printf '%.0f' "$session_pct")
 
 	# "HH:MM" countdown to the 5-hour session reset, right after the session
-	# label -- dim, like the context ring's "(50k/200k)" next to it, but
+	# label -- uncolored, like the label and the path, but
 	# without the brackets: the label is a glyph now, and "(...)" only reads
 	# as a parenthetical beside a word. The weekly block below builds the
 	# same countdown for its own window, which is cut to whole days in the
@@ -776,7 +779,7 @@ if [ -n "$session_pct" ]; then
 			r_h=$(( session_remaining_secs / 3600 ))
 			r_m=$(( (session_remaining_secs % 3600) / 60 ))
 			session_remaining_text=$(printf '%02d:%02d' "$r_h" "$r_m")
-			session_reset_part="${dim}${session_remaining_text}${reset} "
+			session_reset_part="${session_remaining_text} "
 		fi
 	fi
 
@@ -787,8 +790,8 @@ if [ -n "$weekly_pct" ]; then
 
 	# "D:HH:MM" countdown to the 7-day weekly reset, mirroring the session
 	# block's countdown above -- same gating (resets_at present + remaining
-	# time > 0, else fall back to the bare label plus gauge) and same dim
-	# unbracketed style. Unlike the session, a 7-day window can have
+	# time > 0, else fall back to the bare label plus gauge) and the same
+	# uncolored, unbracketed style. Unlike the session, a 7-day window can have
 	# multi-day remaining time, so this adds a leading day digit (0-6,
 	# realistically never needing zero-padding) ahead of the zero-padded
 	# HH:MM, e.g. "3:04:12" for 3 days/4h/12m remaining -- still a fixed
@@ -812,11 +815,11 @@ if [ -n "$weekly_pct" ]; then
 			wr_h=$(( (weekly_remaining_secs % 86400) / 3600 ))
 			wr_m=$(( (weekly_remaining_secs % 3600) / 60 ))
 			weekly_remaining_text=$(printf '%d:%02d:%02d' "$wr_d" "$wr_h" "$wr_m")
-			weekly_reset_part="${dim}${weekly_remaining_text}${reset} "
+			weekly_reset_part="${weekly_remaining_text} "
 			if [ "$wr_d" -gt 0 ]; then
-				weekly_reset_short="${dim}${wr_d}d${reset} "
+				weekly_reset_short="${wr_d}d "
 			else
-				weekly_reset_short="${dim}${wr_h}h${reset} "
+				weekly_reset_short="${wr_h}h "
 			fi
 		fi
 	fi
