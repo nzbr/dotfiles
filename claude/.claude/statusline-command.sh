@@ -10,11 +10,11 @@
 #   - username (green/red)     ([username] style_user = fg:green, style_root = fg:red)
 #   - @hostname (green)        ([hostname] format, styled like the "[@$hostname](fg:green)" segment)
 #   - repo / worktree / branch in a git repo: the repository's name behind a
-#                              repo glyph in salmon, the worktree's name
-#                              behind a fork glyph in gold when it is a linked
-#                              one, then [git_branch]'s own symbol and the
-#                              branch in its "fg:#FCA17D" orange -- one hue
-#                              step apart, so the three read separately
+#                              repo glyph in rose, the worktree's name behind
+#                              a fork glyph in gold when it is a linked one,
+#                              then [git_branch]'s own symbol and the branch
+#                              in its "fg:#FCA17D" orange -- far enough apart
+#                              to stay separate once the line is dimmed
 #   - directory (uncolored)    ([directory] style = "") -- in a repo, only the
 #                              part below the worktree root, and nothing at
 #                              all when that is where you stand; otherwise the
@@ -106,13 +106,19 @@ red=$'\033[31m'
 yellow=$'\033[33m'
 orange=$'\033[38;2;252;161;125m' # matches starship.toml's [git_branch] #FCA17D
 
-# The rest of the git group fans around that orange instead of repeating it:
-# one hue step either side, at the same lightness and saturation, so the
-# repository, the worktree and the branch read as three separate facts and
-# still as one family. The branch keeps the orange itself, being the only one
-# of the three the Starship config has an opinion about.
-repo_color=$'\033[38;2;252;133;125m'     # salmon #FC857D
-worktree_color=$'\033[38;2;252;203;125m' # gold   #FCCB7D
+# The rest of the git group moves off that orange rather than repeating it.
+# The worktree sits a hue step warmer, but the repository goes a good deal
+# further, into a rose: those two are the pair on screen together in every
+# single repository, where the worktree tag only shows up in a linked one,
+# and one hue step could not tell them apart once Claude Code has rendered
+# the whole line a shade down. The branch keeps the orange, being the only
+# one of the three the Starship config has an opinion about.
+#
+# The rose is xterm-256 entry 168 exactly, so it comes out the same on a
+# terminal with no truecolor -- tmux without RGB, for one -- where the other
+# two are approximated to the nearest cube entry.
+repo_color=$'\033[38;2;215;95;135m'      # rose #D75F87, xterm 168
+worktree_color=$'\033[38;2;252;203;125m' # gold #FCCB7D
 track_bg=$'\033[48;2;78;78;78m'  # gray #4E4E4E -- battery_bar's drained cells
 
 # Model-tier colors, distinct at a glance:
