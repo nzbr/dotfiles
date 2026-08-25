@@ -9,21 +9,33 @@
 #                              rather than duplicated here -- see os_symbol)
 #   - username (green/red)     ([username] style_user = fg:green, style_root = fg:red)
 #   - @hostname (green)        ([hostname] format, styled like the "[@$hostname](fg:green)" segment)
-#   - git branch (orange)      ([git_branch] style = "fg:#FCA17D")
-#   - directory (uncolored)    ([directory] style = "", full path, no truncation)
+#   - repo / worktree / branch in a git repo: the repository's name behind a
+#                              repo glyph in salmon, the worktree's name
+#                              behind a fork glyph in gold when it is a linked
+#                              one, then [git_branch]'s own symbol and the
+#                              branch in its "fg:#FCA17D" orange -- one hue
+#                              step apart, so the three read separately
+#   - directory (uncolored)    ([directory] style = "") -- in a repo, only the
+#                              part below the worktree root, and nothing at
+#                              all when that is where you stand; otherwise the
+#                              whole path with $HOME as "~". The glyphs are
+#                              this script's own: starship's [directory]
+#                              carries no symbol and never truncates
 #   - usage limits, drawn as batteries, right after the directory. Each
 #     one shows what is REMAINING (charge and number are 100 - used), but
 #     stays colored by what is USED -- see battery_bar for why. Two
-#     renderings exist, a ten-cell bar and a single icon, and by default
+#     renderings exist, an eight-cell bar and a single icon, and by default
 #     the widest one that fits the terminal is used -- see LIMIT_STYLE
 #     below and the layout block at the end.
 #       - Session (5h) limit  <- input.rate_limits.five_hour.used_percentage
 #       - Weekly (7d) limit   <- input.rate_limits.seven_day.used_percentage
 #       - "Fable" limit       <- input.rate_limits.fable.used_percentage IF
 #                                that field is ever added by Claude Code.
-#   - [right-aligned] model name (colored by tier: Haiku teal / Sonnet blue /
-#     Opus purple / Fable gold)  <- input.model.display_name, input.model.id
-#   - [right-aligned, after model] thinking effort level, e.g. "xhigh" --
+#   - [right-aligned] model name behind a four-pointed star, both colored by
+#     tier: Haiku teal / Sonnet blue / Opus purple / Fable gold
+#     <- input.model.display_name, input.model.id
+#   - [right-aligned, after model] thinking effort level behind a
+#     speedometer, e.g. "xhigh" --
 #     <- input.effort.level, only shown when the field is present (i.e. the
 #     current model supports/exposes a reasoning effort level). Colored to
 #     match Claude Code's own /effort picker (sampled from screenshots):
@@ -43,7 +55,8 @@
 #     (○◔◑◕●) fills with input.context_window.used_percentage (falls back to
 #     total_input_tokens / context_window_size), followed by "(used/size)"
 #     in raw tokens (e.g. "Sonnet 5 xhigh ● 84% (168k/200k)"), abbreviated
-#     with a "k" suffix.
+#     with a "k" suffix. The raw pair is dropped in the icon style, where
+#     the percentage carries the meaning on its own -- see compose_right.
 #
 #     No trailing "❯"/">" indicator -- intentionally removed.
 #
@@ -62,11 +75,11 @@
 # ---------------------------------------------------------------------------
 # Which rendering the usage limits get:
 #
-#   bar    a ten-cell battery plus the number      "▐██████    🬛 63%"
+#   bar    an eight-cell battery plus the number      "▐█████   🬛 63%"
 #   icon   one Material Design battery glyph plus the number   "󰁿 63%"
 #
-# The bar resolves the charge to ten cells; the icon says the same thing in
-# roughly eleven columns less, at ten-percent steps.
+# The bar resolves the charge to sixty-four slices across eight cells; the
+# icon says the same thing in nine columns less, at ten-percent steps.
 #
 #   auto   bars while they fit, icons once they don't  (the default)
 #
@@ -92,6 +105,14 @@ green=$'\033[32m'
 red=$'\033[31m'
 yellow=$'\033[33m'
 orange=$'\033[38;2;252;161;125m' # matches starship.toml's [git_branch] #FCA17D
+
+# The rest of the git group fans around that orange instead of repeating it:
+# one hue step either side, at the same lightness and saturation, so the
+# repository, the worktree and the branch read as three separate facts and
+# still as one family. The branch keeps the orange itself, being the only one
+# of the three the Starship config has an opinion about.
+repo_color=$'\033[38;2;252;133;125m'     # salmon #FC857D
+worktree_color=$'\033[38;2;252;203;125m' # gold   #FCCB7D
 track_bg=$'\033[48;2;78;78;78m'  # gray #4E4E4E -- battery_bar's drained cells
 
 # Model-tier colors, distinct at a glance:
@@ -202,10 +223,10 @@ format_tokens() {
 
 battery_bar() {
 	# $1 = rounded integer USED percentage, $2 = number of cells inside the
-	# casing (default 10). Used when LIMIT_STYLE is "bar".
+	# casing (default 8). Used when LIMIT_STYLE is "bar".
 	#
 	# Drawn as a battery: a casing wall on each side of the cells, e.g.
-	# "▐██████    🬛 63%". Each wall puts its ink on the half of its cell
+	# "▐█████   🬛 63%". Each wall puts its ink on the half of its cell
 	# that faces the charge -- ▐ (right half block) fills its right half,
 	# 🬛 fills its left half -- so the casing butts straight against the
 	# charge with no gap. Box-drawing walls (┃, or ┣/╋) can't do that:
@@ -238,24 +259,48 @@ battery_bar() {
 	# than dim ░ glyphs: the charge then ends on a hard edge instead of
 	# fading into a second texture, and an exhausted limit reads as an
 	# empty track instead of a full bar of stipple.
-	local used="$1" width="${2:-10}" p c filled empty i cells
+	#
+	# The charge retreats in eighths of a cell, not whole cells: the
+	# rightmost cell is drawn as one of ▏▎▍▌▋▊▉ (U+258F..2589, left one
+	# eighth through left seven eighths) in the charge color over the gray
+	# track, e.g. "▐████▉   🬛 62%". Eight cells therefore carry sixty-four
+	# slices. Those are plain Block Elements, so unlike the 🬛 terminal they
+	# carry no font risk at all.
+	#
+	# 1.5625% per slice does not divide 100. Whole slices of a round number
+	# of percent are only possible at five or ten cells (twenty slices of
+	# 5%), and eight is the width that looks right. Eight buys a different
+	# exactness instead: the quarter marks fall on cell boundaries -- two
+	# cells is precisely 25%, four precisely 50% -- which ten cells cannot
+	# do, so halving the bar by eye is accurate.
+	#
+	# Rounding is floor with a clamp at each end. Floor means the slices
+	# never overstate what is left; the clamps mean any charge at all shows
+	# at least the narrowest slice, so a nearly-dead limit is never a bare
+	# track, and eight full cells is reserved for exactly 100%, so a bar
+	# that looks full is full.
+	local used="$1" width="${2:-8}" p c slices filled part empty i cells
+	local eighths=("" ▏ ▎ ▍ ▌ ▋ ▊ ▉)
 	[ "$used" -lt 0 ] && used=0
 	[ "$used" -gt 100 ] && used=100
 	c=$(ring_color "$used")
 	p=$(( 100 - used ))
-	filled=$(( (p * width + 50) / 100 ))
-	[ "$filled" -gt "$width" ] && filled="$width"
-	[ "$filled" -lt 0 ] && filled=0
+	slices=$(( p * width * 8 / 100 ))
+	[ "$p" -gt 0 ] && [ "$slices" -lt 1 ] && slices=1
+	[ "$p" -lt 100 ] && [ "$slices" -ge $(( width * 8 )) ] && slices=$(( width * 8 - 1 ))
+	filled=$(( slices / 8 ))
+	part="${eighths[$(( slices % 8 ))]}"
 	empty=$(( width - filled ))
+	[ -n "$part" ] && empty=$(( empty - 1 ))
 	cells=""
 	for ((i = 0; i < filled; i++)); do cells+="█"; done
 	local cells_empty=""
 	for ((i = 0; i < empty; i++)); do cells_empty+=" "; done
 	local wall_l="${dim}▐${reset}" wall_r="${dim}🬛${reset}"
-	printf "%s%s%s%s%s%s%s %s%s%%%s" \
+	printf "%s%s%s%s%s%s%s%s %s%s%%%s" \
 		"$wall_l" \
 		"$c" "$cells" \
-		"$track_bg" "$cells_empty" "$reset" \
+		"$track_bg" "$part" "$cells_empty" "$reset" \
 		"$wall_r" \
 		"$c" "$p" "$reset"
 }
@@ -332,14 +377,38 @@ build_limits() {
 	# the same dim separator the rest of the line uses. Empty when this
 	# Claude Code build reported no limits at all.
 	local style="$1" segs=() part="" first=true seg
+	# Session and Week name time windows, and Material Design has a glyph
+	# for each: a clock inside a refresh arrow for the rolling five hours,
+	# and a clock on a calendar for the seven days. Both carry a clock face,
+	# so the pair reads as one idea at two scales -- the near window and the
+	# far one -- where an hourglass next to a refresh arrow would be two
+	# unrelated metaphors sharing a line. They stay dim like the words they
+	# replace, because the gauge beside them is what should catch the eye,
+	# and they are glyphs in both styles rather than only the cramped one:
+	# nine columns is worth having even on a line that could afford the
+	# words. "Fable" is a model name rather than a window, so nothing
+	# pictorial says it; that one keeps a letter.
+	local s_label=$'\U000f06b0' # nf-md-update
+	local w_label=$'\U000f16e1' # nf-md-calendar_clock_outline
+	local f_label="F"
+	local w_reset="$weekly_reset_part"
+	if [ "$style" != bar ]; then
+		# The weekly countdown drops to one coarse figure: "3d", or "18h"
+		# once the reset is inside a day, where the bar style has
+		# "3:12:32". Four or five columns back, and nothing lost that this
+		# style was using -- minutes matter for the session window, which
+		# empties while you are sitting there, but a weekly reset days out
+		# only ever gets read as how far off it is.
+		w_reset="$weekly_reset_short"
+	fi
 	if [ -n "$session_pct" ]; then
-		segs+=("${dim}Session${reset} ${session_reset_part}$(limit_gauge "$style" "$s_r")")
+		segs+=("${dim}${s_label}${reset} ${session_reset_part}$(limit_gauge "$style" "$s_r")")
 	fi
 	if [ -n "$weekly_pct" ]; then
-		segs+=("${dim}Week${reset} ${weekly_reset_part}$(limit_gauge "$style" "$w_r")")
+		segs+=("${dim}${w_label}${reset} ${w_reset}$(limit_gauge "$style" "$w_r")")
 	fi
 	if [ -n "$fable_pct" ]; then
-		segs+=("${dim}Fable${reset} $(limit_gauge "$style" "$f_r")")
+		segs+=("${dim}${f_label}${reset} $(limit_gauge "$style" "$f_r")")
 	fi
 	for seg in "${segs[@]}"; do
 		if $first; then
@@ -361,6 +430,22 @@ compose_left() {
 		printf '%s %s│%s %s' "$core_left" "$dim" "$reset" "$limits"
 	else
 		printf '%s' "$core_left"
+	fi
+}
+
+compose_right() {
+	# $1 = style -> the right-aligned block (model, effort, context ring).
+	# Only its tail varies: the bar style closes with the ring's absolute
+	# "(50k/200k)", the compact style stops at the percentage. The ratio is
+	# the first thing worth dropping once room is short -- the percentage
+	# already says how full the window is, and the denominator never changes
+	# within a session, so eleven columns are spent restating it every
+	# refresh. Everything before the tail is assembled once further down;
+	# only the choice between the two tails happens per style.
+	if [ "$1" = bar ]; then
+		printf '%s%s' "$line1_right" "$ctx_tokens_part"
+	else
+		printf '%s' "$line1_right"
 	fi
 }
 
@@ -491,7 +576,18 @@ jqr() {
 
 cwd=$(echo "$input" | jqr '.workspace.current_dir // .cwd // empty')
 [ -z "$cwd" ] && cwd="$PWD"
-display_dir="${cwd/#$HOME/~}"
+# The whole path with $HOME collapsed to "~", behind a plain folder glyph --
+# nf-oct-file_directory, from the same Octicons family as the branch symbol so
+# the two match in weight, and uncolored like the path it introduces, since
+# starship's [directory] has no symbol of its own to copy. Inside a repo the
+# git block below cuts the path down to what sits under the worktree root; the
+# glyph is the same either way, still introducing a path and nothing else.
+#
+# The backslash is load-bearing: an unescaped ~ in the replacement half of a
+# substitution is tilde-expanded straight back into $HOME, which quietly turns
+# the whole thing into a no-op.
+display_dir="${cwd/#$HOME/\~}"
+dir_icon=$'\uf413' # nf-oct-file_directory
 
 # OS icon -- read out of the Starship config's [os.symbols] table rather than
 # from a second copy of the mapping kept here, so this line and the Starship
@@ -563,11 +659,83 @@ fi
 user_part="${user_color}$(whoami)${reset}"
 host_part="${green}@$(hostname -s)${reset}"
 
+# One rev-parse answers three things at once: whether this is a work tree at
+# all, where its root is, and how far below the root the cwd sits. Asking git
+# for that last part rather than subtracting the root from $cwd keeps it right
+# when the two disagree about symlinks, which they do on any distro where
+# /home is a link to /var/home.
 git_part=""
-if git --no-optional-locks -C "$cwd" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+git_info=$(git --no-optional-locks -C "$cwd" rev-parse --show-toplevel --show-prefix 2>/dev/null)
+if [ -n "$git_info" ]; then
+	{ read -r git_root; read -r git_prefix; } <<<"$git_info"
+
+	# Inside a repo the line names the repository, then the worktree when it
+	# is a linked one, then the branch -- and leaves the path to say only what
+	# is below the worktree root. Everything above that root is the same for
+	# every prompt of a session's work, and the root itself is already named
+	# by the repo, so standing at the top of a checkout there is no path left
+	# worth printing. This is the one place the line departs from the Starship
+	# config, whose [directory] has truncation_length = 0 and never truncates.
+	repo_icon=$'\uf401' # nf-oct-repo
+	repo_name="${git_root##*/}"
+
+	# git-dir and git-common-dir are one path in the main worktree and two in
+	# a linked one, which is both the worktree test and the route to the main
+	# checkout, whose directory name is the repository's. But only once both
+	# are absolute: asked relatively, a subdirectory of the main worktree
+	# answers ".../repo/.git" and "../../.git", the same directory spelled two
+	# ways, and every subdirectory would read as a linked tree.
+	# --path-format wants git 2.31. Older git fails this call, leaving the
+	# repo named after whichever checkout is in hand -- right in the main
+	# worktree, the worktree's own name in a linked one -- and no worktree tag.
+	wt_part=""
+	wt_dirs=$(git --no-optional-locks -C "$cwd" rev-parse --path-format=absolute --git-dir --git-common-dir 2>/dev/null)
+	if [ -n "$wt_dirs" ]; then
+		{ read -r wt_git_dir; read -r wt_common_dir; } <<<"$wt_dirs"
+		# A normal repo keeps its common dir at <root>/.git; a bare one is the
+		# common dir, named <repo>.git. Exactly one strip can apply, so test
+		# rather than chain them: a checkout living in a directory that is
+		# itself called "x.git" would otherwise come out as "x".
+		if [ "${wt_common_dir%/.git}" != "$wt_common_dir" ]; then
+			wt_main="${wt_common_dir%/.git}"
+		else
+			wt_main="${wt_common_dir%.git}"
+		fi
+		repo_name="${wt_main##*/}"
+		if [ "$wt_git_dir" != "$wt_common_dir" ]; then
+			# Which checkout this is: normally the worktree directory's own
+			# name, but trees are often parked as <name>/<repo> beside the main
+			# one, which leaves every one of them with the repo's name as its
+			# leaf. There the directory above is what tells them apart. Behind
+			# nf-md-call_split, one line diverging into two, which is what a
+			# worktree is: a single history checked out along a second path.
+			# That does leave the Octicons the other git glyphs come from, but
+			# no Octicon says "the same repo, elsewhere" -- file_submodule, the
+			# nearest, actually means a nested different repo.
+			wt_name="${git_root##*/}"
+			if [ "$wt_name" = "$repo_name" ]; then
+				wt_parent="${git_root%/*}"
+				wt_name="${wt_parent##*/}"
+			fi
+			wt_icon=$'\U000f00fb'
+			wt_part=" ${worktree_color}${wt_icon} ${wt_name}${reset}"
+		fi
+	fi
+
 	branch=$(git --no-optional-locks -C "$cwd" branch --show-current 2>/dev/null)
 	[ -z "$branch" ] && branch=$(git --no-optional-locks -C "$cwd" rev-parse --short HEAD 2>/dev/null)
-	[ -n "$branch" ] && git_part=" ${orange}${branch}${reset}"
+	# nf-oct-git_branch, the same symbol starship.toml's [git_branch] sets,
+	# and orange like it too: that block's format is '[ $symbol $branch ]'
+	# under one style, so the symbol takes the branch's color there as well.
+	# The repository and worktree names sit a hue step either side of that
+	# orange rather than sharing it -- see the palette. Each glyph takes its
+	# own name's color; only the path stays uncolored.
+	branch_icon=$'\uf418'
+	git_part=" ${repo_color}${repo_icon} ${repo_name}${reset}${wt_part}"
+	[ -n "$branch" ] && git_part="${git_part} ${orange}${branch_icon} ${branch}${reset}"
+
+	# Only what lies below the worktree root, and nothing at all at the root.
+	display_dir="${git_prefix%/}"
 fi
 
 # Claude Code usage limits, as batteries, shown right after the directory.
@@ -581,10 +749,12 @@ fable_pct=$(echo "$input" | jqr '.rate_limits.fable.used_percentage // empty')
 if [ -n "$session_pct" ]; then
 	s_r=$(printf '%.0f' "$session_pct")
 
-	# "(HH:MM)" countdown to the 5-hour session reset, right after the
-	# "Session" label -- styled the same dim "(...)" way the context ring
-	# shows "(50k/200k)" next to it. Only "Session" (five_hour) gets this,
-	# not "Week" -- the user specifically asked about the current session.
+	# "HH:MM" countdown to the 5-hour session reset, right after the session
+	# label -- dim, like the context ring's "(50k/200k)" next to it, but
+	# without the brackets: the label is a glyph now, and "(...)" only reads
+	# as a parenthetical beside a word. The weekly block below builds the
+	# same countdown for its own window, which is cut to whole days in the
+	# icon style -- see build_limits.
 	# resets_at is gated the same `// empty` way as session_pct itself (only
 	# present for subscribers after the first API response), and a
 	# non-positive/garbage remainder is treated the same as "absent" -- no
@@ -606,7 +776,7 @@ if [ -n "$session_pct" ]; then
 			r_h=$(( session_remaining_secs / 3600 ))
 			r_m=$(( (session_remaining_secs % 3600) / 60 ))
 			session_remaining_text=$(printf '%02d:%02d' "$r_h" "$r_m")
-			session_reset_part="${dim}(${session_remaining_text})${reset} "
+			session_reset_part="${dim}${session_remaining_text}${reset} "
 		fi
 	fi
 
@@ -615,16 +785,25 @@ fi
 if [ -n "$weekly_pct" ]; then
 	w_r=$(printf '%.0f' "$weekly_pct")
 
-	# "(D:HH:MM)" countdown to the 7-day weekly reset, mirroring the Session
+	# "D:HH:MM" countdown to the 7-day weekly reset, mirroring the session
 	# block's countdown above -- same gating (resets_at present + remaining
-	# time > 0, else fall back to the plain "Week <bar>" rendering) and same
-	# dim "(...)" wrapper style. Unlike Session, a 7-day window can have
+	# time > 0, else fall back to the bare label plus gauge) and same dim
+	# unbracketed style. Unlike the session, a 7-day window can have
 	# multi-day remaining time, so this adds a leading day digit (0-6,
 	# realistically never needing zero-padding) ahead of the zero-padded
 	# HH:MM, e.g. "3:04:12" for 3 days/4h/12m remaining -- still a fixed
 	# width for any value this window can realistically produce, so the
 	# layout stays stable as it counts down.
+	#
+	# A coarse form is built alongside it for the icon style, where the line
+	# has no room for seven columns of clock -- see build_limits. Whole days
+	# while more than one is left, then hours through the final day, so it
+	# never reads "0d" with a reset still the better part of a day away.
+	# Both tiers floor, like the session countdown: the last hour reads
+	# "0h", where rounding up would turn 23h59m into "24h" -- a worse lie
+	# than "0h", and one that contradicts the days tier sitting above it.
 	weekly_reset_part=""
+	weekly_reset_short=""
 	if [ -n "$weekly_resets_at" ]; then
 		now_epoch=$(date +%s)
 		weekly_remaining_secs=$(( weekly_resets_at - now_epoch ))
@@ -633,7 +812,12 @@ if [ -n "$weekly_pct" ]; then
 			wr_h=$(( (weekly_remaining_secs % 86400) / 3600 ))
 			wr_m=$(( (weekly_remaining_secs % 3600) / 60 ))
 			weekly_remaining_text=$(printf '%d:%02d:%02d' "$wr_d" "$wr_h" "$wr_m")
-			weekly_reset_part="${dim}(${weekly_remaining_text})${reset} "
+			weekly_reset_part="${dim}${weekly_remaining_text}${reset} "
+			if [ "$wr_d" -gt 0 ]; then
+				weekly_reset_short="${dim}${wr_d}d${reset} "
+			else
+				weekly_reset_short="${dim}${wr_h}h${reset} "
+			fi
 		fi
 	fi
 
@@ -655,11 +839,19 @@ case "$model_key" in
 	*) model_color="$dim" ;;
 esac
 
-# The glyph carries its own trailing space so that an absent one (no Starship
-# config, or no symbol for this OS) leaves no stray indent at the line start.
+# The spacing is attached to the glyph rather than the join, so that an
+# absent one (no Starship config, or no symbol for this OS) leaves no stray
+# indent at the line start. Two spaces, not the one the other joins use: a
+# distro logo is inked to the edges of its cell where a letter carries its
+# own side bearing, so a single space leaves the username looking welded to
+# the glyph.
 os_part=""
-[ -n "$os_icon" ] && os_part="${os_icon} "
-core_left="${os_part}${user_part}${host_part}${git_part} ${display_dir}"
+[ -n "$os_icon" ] && os_part="${os_icon}  "
+# The path drops out entirely at the top of a checkout, where the repo name
+# has already said everything the path could.
+dir_part=""
+[ -n "$display_dir" ] && dir_part=" ${dir_icon} ${display_dir}"
+core_left="${os_part}${user_part}${host_part}${git_part}${dir_part}"
 
 ctx_tokens=$(echo "$input" | jqr '.context_window.total_input_tokens // empty')
 ctx_size=$(echo "$input" | jqr '.context_window.context_window_size // empty')
@@ -673,16 +865,29 @@ fi
 # (dim, when present), then the context ring -- built up piece by piece so
 # any of these can be absent without leaving a stray space.
 line1_right=""
-[ -n "$model_name" ] && line1_right="${model_color}${model_name}${reset}"
+# nf-md-star_four_points, inside the tier color so it reads as one segment
+# with the name, the way the branch symbol sits inside the branch's orange.
+model_icon=$'\U000f0ae2'
+[ -n "$model_name" ] && line1_right="${model_color}${model_icon} ${model_name}${reset}"
 
 if [ -n "$effort_level" ]; then
+	# nf-md-speedometer. The line is full of fill indicators already -- the
+	# batteries, the ring -- but this is the one place a dial is the literal
+	# subject rather than another metaphor for one: effort is a setting you
+	# pick in /effort, not a quantity being consumed.
+	#
+	# The glyph joins the word before any styling is applied, so it travels
+	# through render_shiny and render_rainbow with it and the sweep crosses
+	# the icon too. Keeping it outside would mean choosing a solid color to
+	# sit beside a word that deliberately has no single color.
+	effort_text=$'\U000f04c5'" ${effort_level}"
 	case "$effort_level" in
-		low) effort_rendered="${effort_low_color}${effort_level}${reset}" ;;
-		medium) effort_rendered="${effort_medium_color}${effort_level}${reset}" ;;
-		high) effort_rendered="${effort_high_color}${effort_level}${reset}" ;;
-		xhigh) effort_rendered=$(render_shiny "$effort_level" $effort_xhigh_rgb "$(date +%s)") ;;
-		max) effort_rendered=$(render_rainbow "$effort_level" "$(date +%s)") ;;
-		*) effort_rendered="${dim}${effort_level}${reset}" ;;
+		low) effort_rendered="${effort_low_color}${effort_text}${reset}" ;;
+		medium) effort_rendered="${effort_medium_color}${effort_text}${reset}" ;;
+		high) effort_rendered="${effort_high_color}${effort_text}${reset}" ;;
+		xhigh) effort_rendered=$(render_shiny "$effort_text" $effort_xhigh_rgb "$(date +%s)") ;;
+		max) effort_rendered=$(render_rainbow "$effort_text" "$(date +%s)") ;;
+		*) effort_rendered="${dim}${effort_text}${reset}" ;;
 	esac
 	if [ -n "$line1_right" ]; then
 		line1_right="${line1_right} ${effort_rendered}"
@@ -694,8 +899,13 @@ fi
 if [ -n "$ctx_used" ]; then
 	ctx_r=$(printf '%.0f' "$ctx_used")
 	ring_part="$(ring_glyph "$ctx_r") $(colorize_pct "$ctx_r")"
+	# The absolute "(50k/200k)" is held back rather than appended here: only
+	# the bar style shows it, and compose_right decides. It can simply be
+	# concatenated on the end because the ring is the last thing to join
+	# line1_right, so its tail is the whole block's tail.
+	ctx_tokens_part=""
 	if [ -n "$ctx_tokens" ] && [ -n "$ctx_size" ] && [ "$ctx_size" -gt 0 ] 2>/dev/null; then
-		ring_part="${ring_part} ${dim}($(format_tokens "$ctx_tokens")/$(format_tokens "$ctx_size"))${reset}"
+		ctx_tokens_part=" ${dim}($(format_tokens "$ctx_tokens")/$(format_tokens "$ctx_size"))${reset}"
 	fi
 	if [ -n "$line1_right" ]; then
 		line1_right="${line1_right} ${ring_part}"
@@ -735,10 +945,20 @@ fit_lr() {
 	# fails if they cannot both fit, which is how the callers below test a
 	# candidate layout: assign the output, and let the exit status say
 	# whether the candidate was usable.
-	local l="$1" r="$2" pad
-	pad=$(( term_width - $(vis_len "$l") - $(vis_len "$r") ))
+	#
+	# The two get the same dim bar that divides everything else on the line.
+	# Right-alignment usually leaves a wide gap between them, but at the
+	# widths where the padding shrinks to a single column the last limit's
+	# percentage would otherwise sit flush against the model name. The bar
+	# closes the left block rather than opening the right one, so it travels
+	# with the percentage it is separating and lands where the other dividers
+	# on that side already sit, instead of floating off at the far margin. It
+	# is priced into the fit, so it cannot be what pushes the line over.
+	local l="$1" r="$2" pad sep=""
+	[ -n "$l" ] && [ -n "$r" ] && sep=" ${dim}│${reset}"
+	pad=$(( term_width - $(vis_len "$l") - $(vis_len "$sep") - $(vis_len "$r") ))
 	[ "$pad" -lt 1 ] && return 1
-	printf '%s%*s%s' "$l" "$pad" '' "$r"
+	printf '%s%s%*s%s' "$l" "$sep" "$pad" '' "$r"
 }
 
 if [ -z "$line1_right" ]; then
@@ -763,15 +983,16 @@ else
 	#
 	# Splitting is treated as the more expensive concession because it
 	# costs a whole row of the user's terminal, while swapping a bar for an
-	# icon only costs resolution (ten cells become ten-percent steps) and
-	# nothing else -- the label, the countdown, the exact percentage and
-	# the color all survive the swap. Step 3 then re-tries the bars on the
+	# icon costs only detail: sixty-four slices become thirteen glyph
+	# states, the weekly countdown drops to whole days, and the ring sheds
+	# its raw token pair. Every label, percentage and color -- the things
+	# worth reading -- survives the swap. Step 3 then re-tries the bars on the
 	# split line, because a line carrying only the limits and the
 	# right-hand block has far more room than one that also carries the
 	# directory, and there is no reason to keep paying for the icons once
 	# that room exists.
 	for style in "${style_ladder[@]}"; do
-		if candidate=$(fit_lr "$(compose_left "$style")" "$line1_right"); then
+		if candidate=$(fit_lr "$(compose_left "$style")" "$(compose_right "$style")"); then
 			line1="$candidate"
 			break
 		fi
@@ -784,17 +1005,24 @@ else
 		# same edge.
 		line1="$core_left"
 		for style in "${style_ladder[@]}"; do
-			if candidate=$(fit_lr "$(build_limits "$style")" "$line1_right"); then
+			if candidate=$(fit_lr "$(build_limits "$style")" "$(compose_right "$style")"); then
 				line2="$candidate"
 				break
 			fi
 		done
 		# Even a line of its own is not enough: emit the narrowest style
-		# with a single space and let it run long, rather than clipping.
-		[ -z "$line2" ] && line2="$(build_limits "$narrowest_style") ${line1_right}"
-		# ...with the leading space trimmed when there were no limits at
-		# all to put in front of it.
-		line2="${line2# }"
+		# and let it run long, rather than clipping. Same divider as
+		# fit_lr, and the same rule -- only when there is something on
+		# both sides of it.
+		if [ -z "$line2" ]; then
+			line2_limits=$(build_limits "$narrowest_style")
+			line2_right=$(compose_right "$narrowest_style")
+			if [ -n "$line2_limits" ] && [ -n "$line2_right" ]; then
+				line2="${line2_limits} ${dim}│${reset} ${line2_right}"
+			else
+				line2="${line2_limits}${line2_right}"
+			fi
+		fi
 	fi
 fi
 
