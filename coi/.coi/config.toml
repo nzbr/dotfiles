@@ -2,6 +2,7 @@
 image = "coi-custom"
 
 [container.build]
+base = "ubuntu:24.04"
 script = "build.sh"
 compression = "none"
 
