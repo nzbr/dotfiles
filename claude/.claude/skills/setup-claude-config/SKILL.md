@@ -20,24 +20,48 @@ them here; they would then be unmanaged and drift.
 ## 1. Confirm the scripts are present
 
 ```bash
-for f in statusline-command.sh notify.sh claude.png; do
+for f in notify.sh claude.png; do
   [ -e "$HOME/.claude/$f" ] && echo "ok      $f" || echo "MISSING $f"
 done
+
+# The statusline arrives one of two ways, and which one this machine has
+# decides what step 4 writes. Prefer the binary: where both exist the
+# wrapper only execs it anyway.
+if [ -x "$HOME/.claude/statusline/claude-statusline" ]; then
+  echo "ok      statusline/claude-statusline (compiled binary)"
+elif [ -e "$HOME/.claude/statusline/claude-statusline.sh" ]; then
+  echo "ok      statusline/claude-statusline.sh (wrapper, compiles on first use)"
+else
+  echo "MISSING statusline (neither the binary nor the wrapper is deployed)"
+fi
 ```
 
 Any of these may be a symlink into a read-only store. That is normal and
-fine — the scripts are read and executed, never written.
+fine — they are read and executed, never written.
+
+Which branch printed decides the rest of this document. The binary is what
+nix/home-manager builds and re-links on every generation switch (the COI
+image build also produces one at the same path, for machines with no
+toolchain of their own). The wrapper is the same program for machines
+without nix: it compiles the crate beside it on first use and caches the
+result under `$XDG_CACHE_HOME`, so it needs `cargo` where the binary needs
+nothing. Both present is not a conflict — that is a home-manager (or COI)
+machine, and the wrapper defers to the binary.
 
 ## 2. Derive the dependencies from the scripts themselves
 
-Read `statusline-command.sh` and `notify.sh` and work out what they need.
-Do not rely on a list in this file: the scripts are maintained elsewhere and
-this document will go stale. What to look for:
+Read `notify.sh` — and, if step 1 found the *wrapper* rather than the
+binary, `statusline/claude-statusline.sh` too — and work out what they need.
+Do not rely on a list in this file: they are maintained elsewhere and this
+document will go stale. The binary needs nothing: it is statically wired to
+its own dependencies and spawns no subprocess, so if step 1 found it, only
+`notify.sh` is in scope here. What to look for:
 
 - **Commands invoked.** Skip shell builtins; you want the external binaries.
-- **Explicit self-checks.** A `REQUIRED_COMMANDS=(...)` array or a series of
-  `command -v x ||` guards is the script telling you its own contract — that
-  is the authoritative list, prefer it over your own grep.
+- **Explicit self-checks.** A series of `command -v x ||` guards is the
+  script telling you its own contract — that is the authoritative list,
+  prefer it over your own grep. The wrapper's `cargo` guard is one: without
+  a Rust toolchain it has no binary to exec and the statusline is blank.
 - **Data files at absolute paths.** The notification icon, and the sound
   theme directory. A missing data file breaks things just as thoroughly as a
   missing binary, and is easier to overlook.
@@ -51,8 +75,10 @@ does not. Note which is which — it decides whether a gap blocks setup or
 merely gets reported.
 
 Sanity check: this should come out to a handful of small CLI tools plus
-libnotify, libcanberra and a freedesktop sound theme. If your reading turns
-up nothing resembling that, you have misread the scripts — look again.
+libnotify, libcanberra and a freedesktop sound theme — plus `cargo` in the
+wrapper case, and nothing at all from the statusline in the binary case. If
+your reading turns up nothing resembling that, you have misread the scripts
+— look again.
 
 ## 3. Verify availability — this is a gate
 
@@ -117,7 +143,12 @@ preserve unrelated keys, stay idempotent, and not race Claude Code's own
 writes to the same file.
 
 ```bash
-SL='{"type":"command","command":"bash ~/.claude/statusline-command.sh","refreshInterval":1}'
+# Same test as step 1, so the config can only ever name something that is there.
+if [ -x "$HOME/.claude/statusline/claude-statusline" ]; then
+  SL='{"type":"command","command":"~/.claude/statusline/claude-statusline","refreshInterval":1}'
+else
+  SL='{"type":"command","command":"bash ~/.claude/statusline/claude-statusline.sh","refreshInterval":1}'
+fi
 NH='{"matcher":".*","hooks":[{"type":"command","command":"bash ~/.claude/notify.sh","timeout":10}]}'
 AH=$(cat <<'EOF'
 {"matcher":"Agent","hooks":[{"type":"command","command":"jq -c 'def deny(msg): {hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:msg}}; (.tool_input.model // \"\" | ascii_downcase) as $m | if (.tool_input.subagent_type // \"\") == \"fork\" then deny(\"Blocked: fork subagents ignore model overrides and always run on the parent model, so an explicit model choice is impossible. Use a non-fork subagent_type with an explicit model.\") elif $m == \"\" then deny(\"Blocked: every Agent call must specify an explicit model. Retry the same call with the model parameter set to an appropriate non-Fable model.\") elif ($m | test(\"fable\")) then deny(\"Blocked: Fable subagents are prohibited. Retry with an explicit non-Fable model.\") else empty end'","statusMessage":"Checking subagent model"}]}
@@ -160,8 +191,10 @@ Why it is shaped that way:
   `tool_input.model` is dropped and re-appended, unrelated PreToolUse hooks
   are preserved. The heredoc is quoted (`<<'EOF'`) on purpose — the payload
   must reach `jq --argjson` byte-for-byte, with no shell expansion.
-- `.statusLine` is overwritten outright. If it held something different,
-  mention that in the report — on a new machine it won't.
+- `.statusLine` is overwritten outright, with whichever of the two forms
+  step 1 found. If it held something different — an older path, or the
+  wrapper on a machine that has since gained the binary — mention that in
+  the report; on a new machine it won't.
 
 Out of scope: `model`, `effortLevel`, `theme`, `skipAutoPermissionPrompt`,
 `enabledPlugins`. Those are preferences, not script wiring, and are set
@@ -181,6 +214,8 @@ jq -r 'keys | join(", ")' "$S"
 
 Expect valid JSON, both selectors printing, exactly **1** notify.sh entry,
 exactly **1** agent guard entry, and every pre-existing key still listed.
+The `.statusLine.command` it prints must name whichever artifact step 1
+found — the binary or the wrapper, not both and not the other one.
 
 The subagent model guard can be proven end to end right here — it is pure
 `jq`, so feed it the payloads Claude Code would send:
@@ -203,9 +238,23 @@ printf '{"hook_event_name":"Notification","notification_type":"auth_success","me
   | bash "$HOME/.claude/notify.sh"; echo "  notify.sh exit=$?"
 ```
 
-Build the statusline's test payload from the fields you saw it read in step 2
-rather than copying one from here, and pipe it in the same way. It must print
-a non-empty line.
+Then the statusline, driven through the exact command that was just written
+— not a guess at it, so this also proves the path in `settings.json`
+resolves:
+
+```bash
+printf '%s' '{"model":{"display_name":"Opus 4.6"},"effort":{"level":"high"},
+"workspace":{"current_dir":"'"$PWD"'"},"context_window":{"used_percentage":42,
+"total_input_tokens":84000,"context_window_size":200000},
+"rate_limits":{"five_hour":{"used_percentage":18,"resets_at":'"$(( $(date +%s) + 3600 ))"'}}}' \
+  | eval "$(jq -r '.statusLine.command' "$S")"; echo
+```
+
+(One line in reality — the wrap above is for the page.) It must print a
+non-empty line carrying user@host, the directory, the model and a context
+ring, and exit 0. On a wrapper machine the *first* run compiles the crate
+and takes tens of seconds; that is the cache being filled, not a hang, and
+every later run is a single `exec`.
 
 `notify.sh` must exit 0 **and** produce a visible toast with sound. Exit 0
 alone proves nothing — it swallows every error by design so that it can never
@@ -406,7 +455,8 @@ with the package that closes it, and whether you installed it or left it to
 the user. If step 6 ran, say which hosts got the forward and which were left
 out.
 
-Close with: the statusline appears on the next prompt, but a newly written
-hook is only picked up once Claude Code reloads its config — tell the user to
-open `/hooks` once, or restart. You cannot do this for them; `/hooks` is an
-interactive menu and opening it ends the turn.
+Close with: the statusline appears on the next prompt — on a wrapper machine
+the very first one may lag while the crate compiles, once — but a newly
+written hook is only picked up once Claude Code reloads its config. Tell the
+user to open `/hooks` once, or restart. You cannot do this for them;
+`/hooks` is an interactive menu and opening it ends the turn.

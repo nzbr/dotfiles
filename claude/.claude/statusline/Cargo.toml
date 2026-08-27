@@ -1,0 +1,52 @@
+[package]
+name    = "claude-statusline"
+version = "0.1.0"
+# Nothing here needs a recent toolchain: with no gix dependency (see git.rs)
+# there is no MSRV to satisfy but our own, and a machine that has to compile
+# this on first run should not be told to go and upgrade rustc first.
+# rust-version is a conservative floor, not a measured one.
+edition      = "2021"
+rust-version = "1.75"
+publish      = false
+
+# Caret ranges, not `=` pins. This crate's contract is "these segments, these
+# colours, this layout", none of which a patch bump can move. The checked-in
+# Cargo.lock plus the wrapper's `--locked` is what makes the build
+# reproducible; `cargo update` should be an ordinary act, not a re-audit.
+[dependencies]
+# JSON. Plain Value plus two 5-line path walkers is the whole of it. Default
+# features only: `raw_value`/`arbitrary_precision` exist to preserve a
+# number's source *text*, which nothing here reads.
+serde_json = "1.0"
+
+# East-Asian width tables, in place of replaying a locale startup
+# (setlocale/nl_langinfo/iconv/mbrtowc) to count columns. Every glyph this
+# line can emit is width 1 under this crate (verified); CJK is 2 where the
+# bash original counted 1 -- an improvement, not a regression.
+unicode-width = "0.2"
+
+# getpwuid_r (via NSS, not $USER -- this runs under `env -i`) and
+# gethostname, without hand-rolling the ERANGE-retry buffer dance. 1.x
+# declares its own libc symbols and has ZERO dependencies; 2.x adds a `libc`
+# dependency and moves `hostname` elsewhere. Pin the major with a caret so a
+# minor bump can't cross that line on its own.
+whoami = "1.6"
+
+# geteuid() and the /dev/tty ioctl width rung. No std API exists for either;
+# these are the only two syscalls the whole program makes outside of read()s.
+# Costs two more crates than `libc` for the same binary size, but removes
+# every `unsafe` block from the crate -- measured faster too.
+rustix = { version = "1.1", features = ["process", "termios"] }
+
+[profile.release]
+# This runs once a second and prints one line: load time dominates compute,
+# so smaller beats faster. Measured here: opt-level=3 is both bigger AND
+# slower than "s" for this binary.
+strip = true
+opt-level = "s"
+lto = true
+codegen-units = 1
+# Deliberately NOT panic = "abort". main() wraps render() in catch_unwind so
+# that any bug -- ours or a pathological input we didn't think of -- degrades
+# to a blank statusline with exit 0 instead of an abort message landing in
+# the user's terminal. Measured cost of keeping unwind tables: ~8 KB, ~24 us.

@@ -106,6 +106,54 @@ EOF
 # Dotfiles
 sudo -u code sh -c 'curl -s https://raw.githubusercontent.com/nzbr/dotfiles/refs/heads/master/control.sh | bash -'
 
+# Statusline
+# The dotfiles install above deploys the wrapper, which compiles the crate
+# beside it on first use -- but mise was ripped out above and nix brings no
+# toolchain of its own, so there is no cargo in this image and the first
+# render would be blank. Build it once here instead, into the statusline
+# directory itself -- the path the wrapper execs in preference to compiling,
+# and that a settings.json seeded from a nix host names outright.
+#
+# That directory is the git checkout line 107 cloned (xstow folded
+# ~/.claude/statusline into a symlink onto it), so this really does drop a
+# build artifact into a working tree. .gitignore in the crate covers the
+# name; nobody commits from this throwaway clone anyway.
+#
+# Ubuntu's cargo and not nix: the crate's MSRV is 1.75, exactly what 24.04
+# ships, for 92 MB of downloads against nix's 755 MB. Nix could not do it
+# anyway -- /nix/store is bind-mounted from the host at run time, so what
+# this build puts in the image's store is invisible there, and a nix-built
+# binary copied out of it dies on its missing interpreter.
+#
+# Fails soft on purpose: an unreachable crates.io, or a Cargo.lock bumped to
+# v4 by a newer cargo, must not fail the whole image build. The wrapper is
+# deployed either way.
+statusline=/home/code/.dotfiles/claude/.claude/statusline
+if [ -f "$statusline/Cargo.toml" ]; then
+	if apt-get install -y --no-install-recommends cargo &&
+		env CARGO_HOME=/tmp/statusline-build/cargo \
+			CARGO_TARGET_DIR=/tmp/statusline-build/target \
+			cargo build --release --locked --manifest-path "$statusline/Cargo.toml"; then
+		install -o code -g code -m 755 \
+			/tmp/statusline-build/target/release/claude-statusline \
+			"$statusline/claude-statusline"
+		# The wrapper looks for the binary beside itself at
+		# ~/.claude/statusline/, which reaches the checkout only while xstow
+		# keeps folding that directory into a symlink. Say so if it ever stops,
+		# rather than silently going back to compiling on first render.
+		[ -x /home/code/.claude/statusline/claude-statusline ] ||
+			echo "statusline: built, but not reachable via ~/.claude/statusline -- check the xstow layout" >&2
+	else
+		echo "statusline: prebuild failed; it compiles on first use instead" >&2
+	fi
+	rm -rf /tmp/statusline-build
+	# autoremove rather than a list of names: cargo's dependencies are
+	# libstd-rust-<version> and libllvm<version>t64, whose names move with
+	# whatever rustc the distro ships.
+	apt-get purge -y cargo
+	apt-get autoremove -y --purge
+fi
+
 apt-get clean
 rm -rf /var/lib/apt/lists/*
 

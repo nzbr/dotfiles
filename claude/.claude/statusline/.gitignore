@@ -1,0 +1,11 @@
+# The wrapper builds with CARGO_TARGET_DIR under the XDG cache dir, so nothing
+# lands here in normal use -- this is only for a plain `cargo build` run inside
+# the project by hand.
+/target
+
+# The built binary. Both packaged deployments put it beside its own sources:
+# home-manager symlinks it into its own copy of this directory, and the COI
+# image build installs it straight into the checkout, because xstow folded
+# ~/.claude/statusline onto exactly that. So on a COI machine this really is
+# a build artifact in the working tree.
+/claude-statusline
