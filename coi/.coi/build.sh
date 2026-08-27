@@ -1,5 +1,20 @@
 set -euxo pipefail
 
+# coi's own build script
+# Everything below builds on it, but coi keeps it embedded in its binary and only
+# pushes *this* file into the build container, so fetch the matching copy.
+# Bump on `coi update`; `coi version` prints what this should be.
+COI_VERSION=v0.11.0
+
+apt-get update
+apt-get install -y --no-install-recommends ca-certificates curl
+
+curl -fsSL -o /tmp/coi-build.sh \
+	"https://raw.githubusercontent.com/mensfeld/code-on-incus/$COI_VERSION/internal/image/build.sh"
+bash /tmp/coi-build.sh
+rm -f /tmp/coi-build.sh
+
+# Its cleanup drops the apt lists again
 apt-get update
 apt-get -y upgrade
 # socat is needed by the claude notification relay
@@ -40,7 +55,7 @@ prefix = ["/"]
 EOF
 
 # mise
-# The base image activates it from /etc/profile.d/mise.sh, ~/.bashrc and ~/.profile,
+# coi's script activates it from /etc/profile.d/mise.sh, ~/.bashrc and ~/.profile,
 # all of which run after our hook, and its prompt hook re-prepends the tool dirs on
 # every prompt -- so its python won over the dev shell's. Toolchains come from nix
 # here, so rip mise out instead of trying to out-order it.
@@ -49,7 +64,7 @@ sed -i '/mise/d' /home/code/.bashrc /home/code/.profile
 rm -rf /home/code/.local/share/mise /home/code/.config/mise
 
 # tmux
-# The image's /etc/tmux.conf leaves terminal-features unset, so tmux assumes the
+# coi's /etc/tmux.conf leaves terminal-features unset, so tmux assumes the
 # outer terminal is 256-color and quantizes every truecolor sequence that passes
 # through it. The per-user file is loaded after /etc/tmux.conf, so this wins.
 cat >/home/code/.tmux.conf <<'EOF'
