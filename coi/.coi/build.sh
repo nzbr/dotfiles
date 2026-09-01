@@ -103,6 +103,21 @@ cat >/etc/tmpfiles.d/run-user-1000.conf <<EOF
 d /run/user/1000 0700 1000 1000 - -
 EOF
 
+# Skills directory
+# xstow folds a target directory that does not exist yet into a single symlink
+# onto the package, so ~/.claude/skills would land on the git checkout and every
+# skill installed later would be written into a working tree. Pre-creating it
+# with a .stowkeep inside makes it non-empty, so xstow descends and links the
+# individual skills instead. Same trick, and same file name, as the nix path in
+# home-manager's dotfiles.nix -- except that one deletes the marker afterwards
+# because the tree becomes home-manager file entries; here it stays, so a later
+# control.sh re-link keeps the directory unfolded.
+#
+# ~/.claude/statusline deliberately keeps folding -- the prebuild below writes
+# into the checkout through it.
+sudo -u code mkdir -p /home/code/.claude/skills
+sudo -u code touch /home/code/.claude/skills/.stowkeep
+
 # Dotfiles
 sudo -u code sh -c 'curl -s https://raw.githubusercontent.com/nzbr/dotfiles/refs/heads/master/control.sh | bash -'
 
