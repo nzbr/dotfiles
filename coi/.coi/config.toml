@@ -9,10 +9,11 @@ compression = "none"
 [paths]
 preserve_workspace_path = true
 
+[defaults]
+profile = "gui"
+
 [defaults.environment]
 BASH_ENV = "/etc/coi/set-environment.sh"
-XDG_RUNTIME_DIR = "/run/user/1000"
-WAYLAND_DISPLAY = "wayland-claude"
 
 [defaults.env_commands]
 # GH_TOKEN = "gh auth token"
@@ -41,7 +42,3 @@ container = "/nix/var/nix/daemon-socket/socket"
 [[sockets]]
 host = "/run/user/1000/claude-notify.sock"
 container = "/run/user/1000/claude-notify-relay.sock"
-
-[[sockets]]
-host = "/run/user/1000/wayland-claude"
-container = "/run/user/1000/wayland-claude"

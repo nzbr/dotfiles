@@ -1,0 +1,21 @@
+# Gives the container a wayland display, served by the socket-activated
+# labwc-claude.service on the host and watched with `claude-display`, which
+# opens a VNC viewer onto it. See claude-display.nix in the home-manager repo
+# for the host half.
+#
+# Kept out of the main config so that a plain session has no display at all:
+# the proxy device is only created for sessions that ask for one.
+context = "CONTEXT.md"
+
+# WAYLAND_DISPLAY is a bare name rather than a path -- libwayland resolves it
+# against XDG_RUNTIME_DIR, so both have to agree with where the socket lands.
+[environment]
+XDG_RUNTIME_DIR = "/run/user/1000"
+WAYLAND_DISPLAY = "wayland-claude"
+
+# Becomes an incus proxy device, whose unixRelayer carries the SCM_RIGHTS
+# block. That is the only reason this works: wl_shm hands the compositor an fd
+# to a shared memory buffer, and a byte-level forwarder would drop it.
+[[sockets]]
+host = "/run/user/1000/wayland-claude"
+container = "/run/user/1000/wayland-claude"
