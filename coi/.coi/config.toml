@@ -35,6 +35,16 @@ readonly = true
 host = "~/.claude/projects"
 container = "/home/code/.claude-shared/projects"
 
+[[mounts.default]]
+host = "~/.claude/skills"
+container = "/home/code/.claude-shared/skills"
+readonly = true
+
+[[mounts.default]]
+host = "~/.claude/output-styles"
+container = "/home/code/.claude-shared/output-styles"
+readonly = true
+
 [[sockets]]
 host = "/nix/var/nix/daemon-socket/socket"
 container = "/nix/var/nix/daemon-socket/socket"

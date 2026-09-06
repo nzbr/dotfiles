@@ -92,11 +92,13 @@ chmod +x /etc/coi/set-environment.sh
 
 ln -s /etc/coi/set-environment.sh /etc/profile.d/20-coi.sh
 
-# Shared Claude Code History
-sudo -u code mkdir -p /home/code/.claude{,-shared/projects}
-rm -rf /home/code/.claude/projects
+# Shared Claude Code History, Skills and Styles
+sudo -u code mkdir -p /home/code/.claude{,-shared/{projects,skills,output-styles}}
+rm -rf /home/code/.claude/{projects,skills,output-styles}
 ln -sfn /home/code/.claude-shared/projects /home/code/.claude/projects
-chown -h 1000:1000 /home/code/.claude/projects
+ln -sfn /home/code/.claude-shared/skills /home/code/.claude/skills
+ln -sfn /home/code/.claude-shared/output-styles /home/code/.claude/output-styles
+chown -h 1000:1000 /home/code/.claude/{projects,skills,output-styles}
 
 # Claude notification relay
 cat >/etc/tmpfiles.d/run-user-1000.conf <<EOF
