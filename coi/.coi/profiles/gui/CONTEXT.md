@@ -132,7 +132,7 @@ pick the PID out of it rather than trusting the match. That is also how to
 check whether something is running: a bare `pgrep -a -f firefox` always finds
 the shell doing the checking.
 
-## Driving a browser
+## Driving a browser: Firefox
 
 **There is no browser installed — start one with `nix run`.** `which firefox`
 finds nothing and apt has no candidate. As with `wayshot` and `wlrctl`, nix
@@ -206,3 +206,117 @@ rather than blocking them, so the natural test reports a working adblocker as
 broken. Capture the window and look for the uBlock icon and its badge count
 instead. If you do want a fetch test, aim it at a host uBlock blocks outright,
 such as `ads.pubmatic.com` or `cdn.taboola.com`.
+
+## Driving a browser: Chromium
+
+**Chromium is the easier one to drive and the harder one to start.** The
+scripted tier is CDP rather than BiDi: listing and opening tabs takes nothing
+but `curl`, there is no session to create and nothing accumulates, so a fresh
+websocket per command is fine. `chrome://` pages are reachable that way as
+well. Everything above about `wayshot`, `wlrctl`, `wtype` and zooming applies
+to it unchanged.
+
+**It needs `--ozone-platform=wayland`.** Without it Chromium picks the X11
+backend, finds no `$DISPLAY` and exits 1 with `Missing X server or $DISPLAY`
+followed by `The platform failed to initialize.  Exiting.`:
+
+    nix run nixpkgs#chromium -- --ozone-platform=wayland \
+      --user-data-dir="$HOME/cr-profile" --remote-debugging-port=9222 \
+      about:blank &
+
+Leave `--no-sandbox` off. Unprivileged user namespaces work in this
+container, so Chromium's own sandbox comes up without help.
+
+**The first twenty log lines are noise.** Every start fails to find a render
+node (`drmGetDevices2() has not found any devices`), fails to initialize EGL
+half a dozen times over, ends that with `Exiting GPU process due to errors
+during initialization`, and throws in `Failed to connect to the bus` plus, on
+and off for as long as it runs, `registration_request.cc` errors from the GCM
+client. None of it matters, because the window renders in software and looks
+right. Wait for
+
+    DevTools listening on ws://127.0.0.1:9222/devtools/browser/<id>
+
+and ignore the rest.
+
+**Tabs over plain HTTP, everything else over the websocket.**
+`http://127.0.0.1:9222/json/version` and `/json/list` answer with JSON, and
+`/json/list` is where a target's `webSocketDebuggerUrl` comes from. Two
+things about `/json/new`: it refuses `GET` with `Using unsafe HTTP verb GET
+to invoke /json/new. This action supports only PUT verb.`, and its `?url=`
+does not navigate - the tab opens on `about:blank` whether you encode the URL
+or not. Open the tab, then navigate it with `Page.navigate`.
+
+    curl -s http://127.0.0.1:9222/json/list
+    curl -s -X PUT http://127.0.0.1:9222/json/new
+
+**Starting Chromium again on the same `--user-data-dir` opens a tab in the
+window that is already running.** It prints `Opening in existing browser
+session.` and exits 0, which is the cheapest way there is to put a page on
+screen. Its own `--remote-debugging-port` is ignored, so the debug port
+always belongs to the first instance.
+
+**Write the CDP client in Node**, for the same reasons as with Firefox: a
+global `WebSocket` and no dependencies. One command per invocation is fine.
+
+    const [url, method, params] = process.argv.slice(2);
+    const sock = new WebSocket(url);
+    sock.onopen = () => {
+      const command = { id: 1, method, params: JSON.parse(params || "{}") };
+      sock.send(JSON.stringify(command));
+    };
+    sock.onmessage = ({ data }) => {
+      const message = JSON.parse(data);
+      if (message.id !== 1) return;
+      console.log(JSON.stringify(message.result ?? message.error));
+      process.exit(0);
+    };
+
+`Page.captureScreenshot` with `captureBeyondViewport: true` is the whole page
+including what is scrolled off, the counterpart of Firefox's `origin:
+"document"`. Save it for pages that need it: one Wikipedia article came out
+29 965 pixels tall and 7 MB, where the plain viewport capture is what you can
+actually read.
+
+**`chrome://` pages navigate fine and read as empty.** CDP has no objection
+to `chrome://policy`, unlike BiDi with `about:` URLs, but the content sits in
+shadow DOM, so `document.body.innerText` comes back as an empty string.
+Screenshot those pages instead of scraping them - `Page.captureScreenshot`
+works on them.
+
+**The app_id is `chromium-browser`, not `chromium`.** So the focus call is
+`wlrctl toplevel focus app_id:chromium-browser`, and that same string is what
+`wayshot --list-toplevels` prints for the window.
+
+**Install the adblocker through a policy, and install the Lite one.**
+Chromium reads `/etc/chromium/policies/managed/*.json`, with no `policies`
+wrapper around the object the way Firefox has:
+
+    sudo mkdir -p /etc/chromium/policies/managed
+    sudo tee /etc/chromium/policies/managed/ublock.json >/dev/null <<'JSON'
+    { "ExtensionSettings": {
+      "ddkjiahejlhfcafbddmgiahcphecmpfh": {
+        "installation_mode": "force_installed",
+        "update_url": "https://clients2.google.com/service/update2/crx",
+        "toolbar_pin": "force_pinned" } } }
+    JSON
+
+It has to be uBlock Origin **Lite** (`ddkjiahejlhfcafbddmgiahcphecmpfh`).
+Plain uBlock Origin is a Manifest V2 extension and this Chromium will not
+install one: a force-install entry for `cjpalhdlnbpafiamejdnhcphjbkeiagm`
+produces no error and no directory for it under
+`<profile>/Default/Extensions`. `toolbar_pin` is the counterpart of Firefox's
+`default_area`, and without it the extension stays hidden behind the puzzle
+piece with its blocked-request badge out of sight.
+
+Restart Chromium afterwards. `chrome://policy` says whether the file was read
+at all - the entry is listed with Source `Platform` and Status `OK` - and an
+extension that really installed is a directory named after its id under
+`<profile>/Default/Extensions/`, in a fresh profile as much as an existing
+one. It also appears in `/json/list` as a `service_worker` target, but only
+while that worker is awake, so not finding it there proves nothing.
+
+**Check the blocking the way you would on Firefox.** `ads.pubmatic.com` and
+`cdn.taboola.com` fail to fetch while `example.com` loads, and the
+googlesyndication and google-analytics scripts answer 200 from a local stub
+here too, so those two mislead on Chromium exactly as they do on Firefox.
