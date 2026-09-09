@@ -17,11 +17,12 @@ rm -f /tmp/coi-build.sh
 # Its cleanup drops the apt lists again
 apt-get update
 apt-get -y upgrade
-# socat is needed by the claude notification relay
+# socat is needed by the claude notification relay, python3 by the login bridge
 apt-get install -y --no-install-recommends \
 	nix-bin \
 	ca-certificates \
 	direnv \
+	python3 \
 	socat \
 	xstow
 
@@ -173,4 +174,3 @@ chown -h 1000:1000 /home/code/.claude/{projects,skills,output-styles}
 
 apt-get clean
 rm -rf /var/lib/apt/lists/*
-

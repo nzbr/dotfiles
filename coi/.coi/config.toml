@@ -14,6 +14,8 @@ profile = "gui"
 
 [defaults.environment]
 BASH_ENV = "/etc/coi/set-environment.sh"
+# Use the auth-bridge as the default browser
+BROWSER = "/home/code/.dotfiles/coi/.coi/login-open"
 
 [defaults.env_commands]
 # GH_TOKEN = "gh auth token"
@@ -52,3 +54,8 @@ container = "/nix/var/nix/daemon-socket/socket"
 [[sockets]]
 host = "/run/user/1000/claude-notify.sock"
 container = "/run/user/1000/claude-notify-relay.sock"
+
+# Socket for the login bridge
+[[sockets]]
+host = "/run/user/1000/claude-login.sock"
+container = "/run/user/1000/claude-login-relay.sock"

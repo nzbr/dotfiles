@@ -1,0 +1,127 @@
+#!/usr/bin/env python3
+# $BROWSER inside a COI container: hands a Claude Code login URL to the host
+# and relays the OAuth callback back in.
+#
+# claude opens the authorize URL with $BROWSER (xdg-open if that is unset) and
+# waits for the redirect on http://localhost:<port>/callback, served by a
+# listener it started on an ephemeral port in this container. Neither half of
+# that works in a sandbox: there is no browser in here worth signing into, and
+# the browser on the host cannot reach a container-local port. So signing in
+# means copying the URL out and the code back in, once per session.
+#
+# This sends the URL to claude-login.socket on the host instead, which checks
+# that it really is a Claude OAuth authorize URL, opens it in the real browser
+# and binds the same port number on its own loopback. When the redirect lands
+# there, the query string comes back down this socket and the request is
+# replayed against claude's own listener in here -- so claude sees the
+# automatic flow it was waiting for, and the browser sees whatever claude's
+# listener answered.
+#
+# Anything that is not a login URL goes to $REAL_BROWSER, or to xdg-open if
+# that is unset, so this stays a usable $BROWSER for everything else. It takes
+# arguments ("nix run nixpkgs#firefox --") and puts the URL where a %s is, or
+# at the end when there is none, the way $BROWSER itself would.
+#
+# The host half is claude-login.nix in the home-manager repo. Failing in here
+# is not fatal: claude keeps showing the URL and a box to paste the code into,
+# which is what happens without this script at all.
+
+import os
+import re
+import shlex
+import socket
+import sys
+from urllib.parse import parse_qs, urlsplit
+
+PROTO = "claude-login/1"
+
+# Both ends agree on this. claude kills $BROWSER after 10 minutes, so exiting
+# with a complaint of our own is nicer than being killed mid-login.
+TIMEOUT = 300
+
+AUTHORIZE = re.compile(r"https://(claude\.ai|claude\.com|platform\.claude\.com)(/cai)?/oauth/authorize")
+REDIRECT = re.compile(r"http://localhost:(\d{1,5})/callback")
+
+# Goes into a request line, so no space, no CR and no LF
+QUERY = re.compile(r"[A-Za-z0-9._~%!$&'()*+,;=:@/?-]{0,2048}")
+
+
+def fallback(url):
+    command = shlex.split(os.environ.get("REAL_BROWSER", "")) or ["xdg-open"]
+    if any("%s" in argument for argument in command):
+        command = [argument.replace("%s", url) for argument in command]
+    else:
+        command.append(url)
+    try:
+        os.execvp(command[0], command)
+    except OSError as error:
+        sys.exit(f"login-open: cannot hand {url} to {command[0]} ({error})")
+
+
+def read_line(sock, limit=4096):
+    buf = b""
+    while not buf.endswith(b"\n") and len(buf) < limit:
+        chunk = sock.recv(1)
+        if not chunk:
+            break
+        buf += chunk
+    return buf.decode("utf-8", "replace").strip()
+
+
+def replay(host, port, query):
+    if not QUERY.fullmatch(query):
+        sys.exit("login-open: the host sent a callback query with characters that cannot go in a request")
+    request = (
+        f"GET /callback?{query} HTTP/1.1\r\n"
+        f"Host: localhost:{port}\r\n"
+        "Connection: close\r\n"
+        "\r\n"
+    ).encode()
+    # No half-close after the request: node's http server treats the FIN as an
+    # abort and drops the response, and claude only writes it once the token
+    # exchange is done, seconds later.
+    with socket.create_connection(("127.0.0.1", port), timeout=TIMEOUT) as claude:
+        claude.sendall(request)
+        while True:
+            chunk = claude.recv(65536)
+            if not chunk:
+                break
+            host.sendall(chunk)
+    host.shutdown(socket.SHUT_WR)
+
+
+def main(argv):
+    if len(argv) != 2:
+        sys.exit("usage: login-open <url>")
+    url = argv[1]
+
+    parts = urlsplit(url)
+    if not AUTHORIZE.fullmatch(f"{parts.scheme}://{parts.netloc}{parts.path}"):
+        fallback(url)
+
+    # The manual URL redirects to platform.claude.com rather than to a port in
+    # here, and there is nothing to relay for it
+    redirect = REDIRECT.fullmatch(parse_qs(parts.query).get("redirect_uri", [""])[0])
+    if not redirect:
+        fallback(url)
+    port = int(redirect.group(1))
+
+    runtime = os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}"
+    relay = os.environ.get("CLAUDE_LOGIN_RELAY") or f"{runtime}/claude-login-relay.sock"
+
+    with socket.socket(socket.AF_UNIX) as host:
+        host.settimeout(TIMEOUT)
+        try:
+            host.connect(relay)
+        except OSError as error:
+            sys.exit(f"login-open: no login bridge on {relay} ({error})")
+        host.sendall(f"{PROTO} {url}\n".encode())
+        reply = read_line(host)
+        kind, _, rest = reply.partition(" ")
+        if kind != "callback":
+            sys.exit(f"login-open: the bridge did not open it: {rest or reply}")
+        replay(host, port, rest)
+
+
+if __name__ == "__main__":
+    main(sys.argv)
