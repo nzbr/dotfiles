@@ -6,6 +6,9 @@ set -euxo pipefail
 # Bump on `coi update`; `coi version` prints what this should be.
 COI_VERSION=v0.12.0
 
+# Which agent harnesses get installed into the image
+export COI_AGENTS=claude,codex
+
 apt-get update
 apt-get install -y --no-install-recommends ca-certificates curl
 
