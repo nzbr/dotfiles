@@ -4,7 +4,7 @@ set -euxo pipefail
 # Everything below builds on it, but coi keeps it embedded in its binary and only
 # pushes *this* file into the build container, so fetch the matching copy.
 # Bump on `coi update`; `coi version` prints what this should be.
-COI_VERSION=v0.11.0
+COI_VERSION=v0.12.0
 
 apt-get update
 apt-get install -y --no-install-recommends ca-certificates curl
