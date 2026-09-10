@@ -20,7 +20,7 @@ rm -f /tmp/coi-build.sh
 # Its cleanup drops the apt lists again
 apt-get update
 apt-get -y upgrade
-# socat is needed by the claude notification relay, python3 by the login bridge
+# socat is needed by the notification relay, python3 by the login bridge
 apt-get install -y --no-install-recommends \
 	nix-bin \
 	ca-certificates \

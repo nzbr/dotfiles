@@ -52,10 +52,10 @@ host = "/nix/var/nix/daemon-socket/socket"
 container = "/nix/var/nix/daemon-socket/socket"
 
 [[sockets]]
-host = "/run/user/1000/claude-notify.sock"
-container = "/run/user/1000/claude-notify-relay.sock"
+host = "/run/user/1000/agent-notify.sock"
+container = "/run/user/1000/agent-notify-relay.sock"
 
 # Socket for the login bridge
 [[sockets]]
-host = "/run/user/1000/claude-login.sock"
-container = "/run/user/1000/claude-login-relay.sock"
+host = "/run/user/1000/agent-login.sock"
+container = "/run/user/1000/agent-login-relay.sock"

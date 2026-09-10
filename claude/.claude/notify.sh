@@ -28,7 +28,7 @@ payload=$(cat)
 # point: a host in the middle of a chain gets the payload on its listener,
 # runs this script again, finds *its* relay socket and hands it on -- so a
 # notification can travel as many hops as there are tunnels.
-relay=${CLAUDE_NOTIFY_RELAY:-${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/claude-notify-relay.sock}
+relay=${AGENT_NOTIFY_RELAY:-${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/agent-notify-relay.sock}
 if [ -S "$relay" ] && command -v socat >/dev/null 2>&1; then
   # A socket left behind by a dead tunnel fails to connect -- in that case fall
   # through and render here, which is right when this is the desktop after all.

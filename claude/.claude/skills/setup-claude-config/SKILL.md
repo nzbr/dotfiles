@@ -304,7 +304,7 @@ For each chosen host:
 
 ```
 Host devbox
-  RemoteForward /run/user/1000/claude-notify-relay.sock /run/user/1000/claude-notify.sock
+  RemoteForward /run/user/1000/agent-notify-relay.sock /run/user/1000/agent-notify.sock
   StreamLocalBindUnlink yes
 ```
 
@@ -353,17 +353,17 @@ hand-written unit is both unmanaged drift *and* something that breaks the next
 `home-manager switch`. Add to the home configuration:
 
 ```nix
-systemd.user.sockets.claude-notify = {
+systemd.user.sockets.agent-notify = {
   Socket = {
-    ListenStream = "%t/claude-notify.sock";
+    ListenStream = "%t/agent-notify.sock";
     SocketMode = "0600";
     Accept = true;
   };
   Install.WantedBy = [ "sockets.target" ];
 };
 
-systemd.user.services."claude-notify@" = {
-  Unit.Description = "Render a Claude Code notification forwarded from a remote host";
+systemd.user.services."agent-notify@" = {
+  Unit.Description = "Render an agent harness notification forwarded from a remote host";
   Service = {
     Type = "simple";
     ExecStart = "${pkgs.bash}/bin/bash %h/.claude/notify.sh";
@@ -382,11 +382,11 @@ pending change in their configuration too, which is theirs to time.
 
 Only on a machine with no such tooling, write the units directly:
 
-`~/.config/systemd/user/claude-notify.socket`
+`~/.config/systemd/user/agent-notify.socket`
 
 ```ini
 [Socket]
-ListenStream=%t/claude-notify.sock
+ListenStream=%t/agent-notify.sock
 SocketMode=0600
 Accept=yes
 
@@ -394,11 +394,11 @@ Accept=yes
 WantedBy=sockets.target
 ```
 
-`~/.config/systemd/user/claude-notify@.service`
+`~/.config/systemd/user/agent-notify@.service`
 
 ```ini
 [Unit]
-Description=Render a Claude Code notification forwarded from a remote host
+Description=Render an agent harness notification forwarded from a remote host
 
 [Service]
 Type=simple
@@ -408,7 +408,7 @@ Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=%t/bus
 ```
 
 then `systemctl --user daemon-reload && systemctl --user enable --now
-claude-notify.socket`. Point `ExecStart` at a bash that exists on that machine
+agent-notify.socket`. Point `ExecStart` at a bash that exists on that machine
 — `/bin/bash` is absent on NixOS.
 
 `DBUS_SESSION_BUS_ADDRESS` in the unit is not decoration: a socket-activated
@@ -423,7 +423,7 @@ machines. The differing socket names are what keep it from feeding itself.
 Without systemd at all, the same thing as a long-running process:
 
 ```bash
-socat UNIX-LISTEN:"$XDG_RUNTIME_DIR/claude-notify.sock",fork,mode=600,unlink-early \
+socat UNIX-LISTEN:"$XDG_RUNTIME_DIR/agent-notify.sock",fork,mode=600,unlink-early \
   SYSTEM:'bash "$HOME/.claude/notify.sh"'
 ```
 
@@ -433,7 +433,7 @@ Loopback first — this tests the listener alone, no SSH involved:
 
 ```bash
 printf '{"hook_event_name":"Notification","notification_type":"auth_success","message":"relay listener works","title":"Claude Code"}' \
-  | socat -u - UNIX-CONNECT:"$XDG_RUNTIME_DIR/claude-notify.sock"
+  | socat -u - UNIX-CONNECT:"$XDG_RUNTIME_DIR/agent-notify.sock"
 ```
 
 Then end to end, which also proves the forward and the remote's `socat`:

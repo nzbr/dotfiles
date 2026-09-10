@@ -1,30 +1,37 @@
 #!/usr/bin/env python3
-# $BROWSER inside a COI container: hands a Claude Code login URL to the host
-# and relays the OAuth callback back in.
+# $BROWSER inside a COI container: hands an agent harness's login URL to the
+# host and relays the OAuth callback back in. Both claude and codex sign in
+# this way.
 #
-# claude opens the authorize URL with $BROWSER (xdg-open if that is unset) and
-# waits for the redirect on http://localhost:<port>/callback, served by a
-# listener it started on an ephemeral port in this container. Neither half of
-# that works in a sandbox: there is no browser in here worth signing into, and
-# the browser on the host cannot reach a container-local port. So signing in
-# means copying the URL out and the code back in, once per session.
+# The harness opens the authorize URL with $BROWSER (xdg-open if that is
+# unset) and waits for the redirect on http://localhost:<port>/..., served by
+# a listener it started in this container. Neither half of that works in a
+# sandbox: there is no browser in here worth signing into, and the browser on
+# the host cannot reach a container-local port. So signing in means copying
+# the URL out and the code back in, once per session.
 #
-# This sends the URL to claude-login.socket on the host instead, which checks
-# that it really is a Claude OAuth authorize URL, opens it in the real browser
-# and binds the same port number on its own loopback. When the redirect lands
-# there, the query string comes back down this socket and the request is
-# replayed against claude's own listener in here -- so claude sees the
-# automatic flow it was waiting for, and the browser sees whatever claude's
-# listener answered.
+# This sends the URL to agent-login.socket on the host instead, which checks
+# that it really is an authorize URL of a harness it knows, opens it in the
+# real browser and binds the same port number on its own loopback. Every
+# request the browser then makes to that port comes back down this socket, is
+# replayed against the harness's own listener in here, and its answer goes
+# back out -- so the harness sees the automatic flow it was waiting for, and
+# the browser sees whatever the harness answered.
+#
+# claude is done after the one callback. codex answers its callback with a
+# redirect to a success page on the same port and only finishes signing in
+# once that page has been fetched, hence the loop.
 #
 # Anything that is not a login URL goes to $REAL_BROWSER, or to xdg-open if
 # that is unset, so this stays a usable $BROWSER for everything else. It takes
 # arguments ("nix run nixpkgs#firefox --") and puts the URL where a %s is, or
 # at the end when there is none, the way $BROWSER itself would.
 #
-# The host half is claude-login.nix in the home-manager repo. Failing in here
-# is not fatal: claude keeps showing the URL and a box to paste the code into,
-# which is what happens without this script at all.
+# The host half is agent-login.nix in the home-manager repo. Failing in here
+# is not fatal: the harness keeps showing the URL and a box to paste the code
+# into, which is what happens without this script at all. Only claude shows
+# what this prints, though -- codex spawns $BROWSER with both its output
+# streams on /dev/null.
 
 import os
 import re
@@ -33,17 +40,25 @@ import socket
 import sys
 from urllib.parse import parse_qs, urlsplit
 
-PROTO = "claude-login/1"
+PROTO = "agent-login/2"
 
 # Both ends agree on this. claude kills $BROWSER after 10 minutes, so exiting
 # with a complaint of our own is nicer than being killed mid-login.
 TIMEOUT = 300
 
-AUTHORIZE = re.compile(r"https://(claude\.ai|claude\.com|platform\.claude\.com)(/cai)?/oauth/authorize")
-REDIRECT = re.compile(r"http://localhost:(\d{1,5})/callback")
+# Loose on purpose: the host does the checking that matters, this only decides
+# whether a URL is a login at all and which port to replay against.
+AUTHORIZE = re.compile(
+    r"https://(claude\.ai|claude\.com|platform\.claude\.com)(/cai)?/oauth/authorize"
+    r"|https://auth\.openai\.com/oauth/authorize"
+)
+REDIRECT = re.compile(r"http://localhost:(\d{1,5})/(auth/)?callback")
 
 # Goes into a request line, so no space, no CR and no LF
-QUERY = re.compile(r"[A-Za-z0-9._~%!$&'()*+,;=:@/?-]{0,2048}")
+TARGET = re.compile(r"/[A-Za-z0-9._~%!$&'()*+,;=:@/?-]{0,8191}")
+
+LENGTH = re.compile(rb"\r\ncontent-length:[ \t]*(\d{1,9})", re.IGNORECASE)
+RESPONSE_LIMIT = 1 << 20
 
 
 def fallback(url):
@@ -58,7 +73,7 @@ def fallback(url):
         sys.exit(f"login-open: cannot hand {url} to {command[0]} ({error})")
 
 
-def read_line(sock, limit=4096):
+def read_line(sock, limit=8192):
     buf = b""
     while not buf.endswith(b"\n") and len(buf) < limit:
         chunk = sock.recv(1)
@@ -68,11 +83,35 @@ def read_line(sock, limit=4096):
     return buf.decode("utf-8", "replace").strip()
 
 
-def replay(host, port, query):
-    if not QUERY.fullmatch(query):
-        sys.exit("login-open: the host sent a callback query with characters that cannot go in a request")
+def read_response(harness):
+    # Content-Length rather than end of stream, because a harness with another
+    # request still to serve keeps its listener open: codex only finishes once
+    # the success page its callback redirects to has been fetched as well.
+    buf = b""
+    while b"\r\n\r\n" not in buf and len(buf) < RESPONSE_LIMIT:
+        chunk = harness.recv(65536)
+        if not chunk:
+            return buf
+        buf += chunk
+    head = buf.partition(b"\r\n\r\n")[0]
+    length = LENGTH.search(head + b"\r\n")
+    # Without one, end of stream is all there is to go by -- which is also
+    # what the last response of a login looks like, since the harness drops
+    # its listener right after writing it
+    end = len(head) + 4 + int(length.group(1)) if length else RESPONSE_LIMIT
+    while len(buf) < end:
+        chunk = harness.recv(65536)
+        if not chunk:
+            break
+        buf += chunk
+    return buf[:end]
+
+
+def serve(host, port, target):
+    if not TARGET.fullmatch(target):
+        sys.exit("login-open: the host sent a request target with characters that cannot go in a request")
     request = (
-        f"GET /callback?{query} HTTP/1.1\r\n"
+        f"GET {target} HTTP/1.1\r\n"
         f"Host: localhost:{port}\r\n"
         "Connection: close\r\n"
         "\r\n"
@@ -80,14 +119,10 @@ def replay(host, port, query):
     # No half-close after the request: node's http server treats the FIN as an
     # abort and drops the response, and claude only writes it once the token
     # exchange is done, seconds later.
-    with socket.create_connection(("127.0.0.1", port), timeout=TIMEOUT) as claude:
-        claude.sendall(request)
-        while True:
-            chunk = claude.recv(65536)
-            if not chunk:
-                break
-            host.sendall(chunk)
-    host.shutdown(socket.SHUT_WR)
+    with socket.create_connection(("127.0.0.1", port), timeout=TIMEOUT) as harness:
+        harness.sendall(request)
+        response = read_response(harness)
+    host.sendall(f"response {len(response)}\n".encode() + response)
 
 
 def main(argv):
@@ -99,15 +134,15 @@ def main(argv):
     if not AUTHORIZE.fullmatch(f"{parts.scheme}://{parts.netloc}{parts.path}"):
         fallback(url)
 
-    # The manual URL redirects to platform.claude.com rather than to a port in
-    # here, and there is nothing to relay for it
+    # claude's manual URL redirects to platform.claude.com rather than to a
+    # port in here, and there is nothing to relay for it
     redirect = REDIRECT.fullmatch(parse_qs(parts.query).get("redirect_uri", [""])[0])
     if not redirect:
         fallback(url)
     port = int(redirect.group(1))
 
     runtime = os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}"
-    relay = os.environ.get("CLAUDE_LOGIN_RELAY") or f"{runtime}/claude-login-relay.sock"
+    relay = os.environ.get("AGENT_LOGIN_RELAY") or f"{runtime}/agent-login-relay.sock"
 
     with socket.socket(socket.AF_UNIX) as host:
         host.settimeout(TIMEOUT)
@@ -116,11 +151,18 @@ def main(argv):
         except OSError as error:
             sys.exit(f"login-open: no login bridge on {relay} ({error})")
         host.sendall(f"{PROTO} {url}\n".encode())
-        reply = read_line(host)
-        kind, _, rest = reply.partition(" ")
-        if kind != "callback":
-            sys.exit(f"login-open: the bridge did not open it: {rest or reply}")
-        replay(host, port, rest)
+        while True:
+            message = read_line(host)
+            kind, _, rest = message.partition(" ")
+            if kind == "get":
+                serve(host, port, rest)
+            elif kind == "error":
+                sys.exit(f"login-open: the bridge did not open it: {rest or message}")
+            elif kind == "":
+                # End of stream: the bridge is done with us, one way or another
+                return
+            else:
+                sys.exit(f"login-open: the bridge said something unexpected: {message[:80]!r}")
 
 
 if __name__ == "__main__":
