@@ -1,8 +1,8 @@
 #!/bin/bash
 # vim: syntax=sh
-# Attach to the coi container of the current directory, or start a new one.
-# Arguments are passed to `coi shell`, so they only apply when a new session
-# is started.
+# Attach to the tmux session in the coi container of the current directory, or
+# start a container with a plain tmux shell. Arguments are passed to `coi run`,
+# so they only apply when a new container is started.
 set -euo pipefail
 
 workspace="$(pwd -P)"
@@ -11,37 +11,93 @@ workspace="$(pwd -P)"
 # may or may not have gone through the /home -> /var/home symlink, so compare
 # canonicalized paths instead of the strings.
 containers=()
-while IFS=$'\t' read -r ws name; do
+statuses=()
+while IFS=$'\t' read -r ws name status; do
 	[ -n "$name" ] || continue
 	[ "$(realpath -m -- "$ws")" == "$workspace" ] || continue
 	containers+=("$name")
+	statuses+=("$status")
 done < <(
 	coi list --format json |
-		jq -r '.active_containers[]? | [.workspace, .name] | @tsv'
+		jq -r '.active_containers[]? | [.workspace, .name, .status] | @tsv'
 )
 
 if [ ${#containers[@]} -gt 0 ]; then
 	container="${containers[0]}"
+	status="${statuses[0]}"
 	if [ ${#containers[@]} -gt 1 ]; then
 		echo "Multiple containers for this workspace (${containers[*]}), using $container" >&2
 	fi
 	if [ $# -gt 0 ]; then
-		echo "Arguments only apply when a new session is started: $*" >&2
+		echo "Arguments only apply when a new container is started: $*" >&2
 	fi
 
-	# `coi attach` prints "no tmux session found" and still exits 0, so ask
-	# tmux itself whether there is anything to attach to. Its sessions are
-	# named after their container.
-	if coi tmux list --format json | jq -e --arg c "$container" 'any(.[]; .container == $c)' >/dev/null; then
-		exec coi attach "$container"
+	if [[ "${status,,}" != running ]]; then
+		coi container start "$container"
 	fi
+else
+	# `coi run` does the normal container setup without launching an agent. Keep
+	# that run alive for as long as its tmux session exists; otherwise an
+	# ephemeral container would be removed as soon as the detached session was
+	# created. The session name is the one `coi attach` and `coi tmux` expect.
+	coi run "$@" -- bash -c '
+		set -e
+		session="coi-$(hostname)"
+		tmux new-session -d -s "$session" -c "$PWD"
+		while tmux has-session -t "$session" 2>/dev/null; do
+			sleep 1
+		done
+	' &
+	runner_pid=$!
 
-	# Falling through to `coi shell` here would leave the dead container
-	# behind and start a second one in the next slot, which is never what I
-	# want from this script; ask to get rid of it instead.
-	read -r -p "Cannot attach to $container. Shut it down and start a new session? [y/N] " reply
-	[[ "$reply" =~ ^[Yy] ]] || exit 1
-	coi shutdown --force "$container"
+	# Wait for coi to finish setup and for the command above to create tmux.
+	# If setup fails, preserve coi's exit status instead of spinning forever.
+	while kill -0 "$runner_pid" 2>/dev/null; do
+		container=""
+		while IFS=$'\t' read -r ws name; do
+			[ "$(realpath -m -- "$ws")" == "$workspace" ] || continue
+			if coi tmux list --format json 2>/dev/null |
+				jq -e --arg c "$name" 'any(.[]; .container == $c)' >/dev/null; then
+				container="$name"
+				break
+			fi
+		done < <(
+			coi list --format json 2>/dev/null |
+				jq -r '.active_containers[]? | [.workspace, .name] | @tsv'
+		)
+		[ -n "$container" ] && break
+		sleep 0.1
+	done
+
+	if [ -z "${container:-}" ]; then
+		if wait "$runner_pid"; then
+			exit 0
+		else
+			exit $?
+		fi
+	fi
 fi
 
-exec coi shell "$@"
+# `new-session -A` is an atomic attach-or-create. In particular, it creates a
+# fresh plain-shell session in a surviving container when regular `coi attach`
+# has nothing left to attach to.
+term="${TERM:-xterm-256color}"
+case "$term" in
+	xterm | xterm-color | xterm-256color) ;;
+	xterm-* | wezterm* | alacritty* | kitty* | foot* | rio* | contour* | st-* | tmux-256color* | screen-256color*)
+		term=xterm-256color
+		;;
+esac
+
+coi container exec "$container" \
+	--user 1000 --group 1000 \
+	--env HOME=/home/code --env "TERM=$term" \
+	--tty -- tmux new-session -A -s "coi-$container"
+
+# When this invocation launched the container and the user exited the tmux
+# shell (rather than detaching), let `coi run` finish its normal cleanup before
+# returning to the outer shell.
+if [ -n "${runner_pid:-}" ] &&
+	! coi tmux list --format json | jq -e --arg c "$container" 'any(.[]; .container == $c)' >/dev/null; then
+	wait "$runner_pid"
+fi
