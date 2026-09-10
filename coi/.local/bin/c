@@ -18,8 +18,8 @@ while IFS=$'\t' read -r ws name status; do
 	containers+=("$name")
 	statuses+=("$status")
 done < <(
-	coi list --format json |
-		jq -r '.active_containers[]? | [.workspace, .name, .status] | @tsv'
+	coi container list --format json |
+		jq -r '.[] | (.devices.workspace.source // .expanded_devices.workspace.source // empty) as $ws | [$ws, .name, .status] | @tsv'
 )
 
 if [ ${#containers[@]} -gt 0 ]; then
@@ -62,8 +62,8 @@ else
 				break
 			fi
 		done < <(
-			coi list --format json 2>/dev/null |
-				jq -r '.active_containers[]? | [.workspace, .name] | @tsv'
+			coi container list --format json 2>/dev/null |
+				jq -r '.[] | (.devices.workspace.source // .expanded_devices.workspace.source // empty) as $ws | [$ws, .name] | @tsv'
 		)
 		[ -n "$container" ] && break
 		sleep 0.1
