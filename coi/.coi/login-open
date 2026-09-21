@@ -27,9 +27,12 @@
 # arguments ("nix run nixpkgs#firefox --") and puts the URL where a %s is, or
 # at the end when there is none, the way $BROWSER itself would.
 #
-# The host half is agent-login.nix in the home-manager repo. Failing in here
-# is not fatal: the harness keeps showing the URL and a box to paste the code
-# into, which is what happens without this script at all. Only claude shows
+# The host half is agent-login.nix in the home-manager repo. What answers may
+# be the desktop itself or an ssh host carrying the exchange further out -- a
+# hop copies bytes without reading them, so this end sees the same
+# conversation however many tunnels are behind it. Failing in here is not
+# fatal: the harness keeps showing the URL and a box to paste the code into,
+# which is what happens without this script at all. Only claude shows
 # what this prints, though -- codex spawns $BROWSER with both its output
 # streams on /dev/null.
 

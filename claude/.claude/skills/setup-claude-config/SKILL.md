@@ -448,12 +448,59 @@ failure look identical from here. If the loopback works and the end-to-end
 does not, the fault is the tunnel: check that the relay socket exists on the
 remote during a session, and that its path matches what `notify.sh` computes.
 
+### 6e. The same tunnel, for COI logins
+
+Only if that remote runs COI containers — skip otherwise, and skip it
+entirely on a machine with no `agent-login.socket`.
+
+Signing an agent in from inside a container already goes through a bridge on
+the machine with the browser (`agent-login.nix` in the home-manager repo).
+Over SSH that browser is two hops away: container, then remote, then client.
+The bridge carries a login on rather than opening anything whenever a relay
+socket was forwarded into it, so this needs no code — just a second forward
+on the hosts that got the first one:
+
+```
+Host devbox
+  RemoteForward /run/user/1000/agent-notify-relay.sock /run/user/1000/agent-notify.sock
+  RemoteForward /run/user/1000/agent-login-relay.sock /run/user/1000/agent-login.sock
+  StreamLocalBindUnlink yes
+```
+
+The naming works out the same way as for notifications, and for the same
+reason. On the remote, `agent-login.sock` is its own listener — the one coi
+maps into each container — and `agent-login-relay.sock` is the forward
+pointing further out. A hop dials the second and never the first, so it
+cannot answer itself.
+
+The remote needs the listener too. Where it is declarative that is
+`agent-login.nix`; where it is not, the same two unit files as in 6c with
+`socat` in place of the bridge, which is all a middle hop does anyway:
+
+```ini
+[Service]
+Type=simple
+ExecStart=/usr/bin/socat -t 5 - UNIX-CONNECT:%t/agent-login-relay.sock
+StandardInput=socket
+StandardError=journal
+RuntimeMaxSec=600
+```
+
+Leave `StandardOutput` alone — the reply has to go back out the connection,
+which is what the inetd default already does. `-t 5` is why this is not the
+bare default: socat gives the other direction only half a second after an end
+of stream, and the far end's last act in a login that failed is to say why.
+
+To verify, sign in from inside a container on that remote: `claude /login` or
+`codex login` should open a page on the client. `journalctl --user -u
+'agent-login@*'` on the remote shows one line per hop when it works.
+
 ## 7. Report
 
 State what changed, what was already correct, and any gap from step 3 —
 with the package that closes it, and whether you installed it or left it to
 the user. If step 6 ran, say which hosts got the forward and which were left
-out.
+out, and whether the login relay in 6e went on with it.
 
 Close with: the statusline appears on the next prompt — on a wrapper machine
 the very first one may lag while the crate compiles, once — but a newly
