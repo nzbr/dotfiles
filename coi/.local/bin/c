@@ -1,9 +1,68 @@
 #!/bin/bash
 # vim: syntax=sh
 # Attach to the tmux session in the coi container of the current directory, or
-# start a container with a plain tmux shell. Arguments are passed to `coi run`,
-# so they only apply when a new container is started.
+# start a container with a plain shell in it.
 set -euo pipefail
+
+usage() {
+	cat <<-'EOF'
+		Usage: c [options]
+
+		Attach to the coi container of the current directory, or start one with a
+		plain shell if there is none.
+
+		  -n, --new           delete the container for this workspace first, so the
+		                      shell starts in a fresh one
+		  -f, --force         with --new: kill the container instead of giving it a
+		                      grace period
+		      --shutdown      delete the container for this workspace and stop
+		      --kill          the same, but without the grace period
+		  -p, --profile NAME  profile for a container started by this invocation
+		  -s, --slot N        only consider slot N, and start the container there
+		  -h, --help          show this
+	EOF
+}
+
+die() {
+	echo "$*" >&2
+	usage >&2
+	exit 2
+}
+
+new=false
+force=false
+stop=""
+profile=""
+slot=""
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+	-n | --new) new=true ;;
+	-f | --force) force=true ;;
+	--shutdown) stop=shutdown ;;
+	--kill) stop=kill ;;
+	-p | --profile)
+		[ $# -ge 2 ] || die "$1 needs a profile name"
+		profile="$2"
+		shift
+		;;
+	--profile=*) profile="${1#*=}" ;;
+	-s | --slot)
+		[ $# -ge 2 ] || die "$1 needs a slot number"
+		slot="$2"
+		shift
+		;;
+	--slot=*) slot="${1#*=}" ;;
+	-h | --help)
+		usage
+		exit 0
+		;;
+	*) die "Unknown argument: $1" ;;
+	esac
+	shift
+done
+
+[ -z "$stop" ] || ! $new || die "--new and --$stop do opposite things"
 
 workspace="$(pwd -P)"
 
@@ -15,6 +74,8 @@ statuses=()
 while IFS=$'\t' read -r ws name status; do
 	[ -n "$name" ] || continue
 	[ "$(realpath -m -- "$ws")" == "$workspace" ] || continue
+	# The slot is the last segment of the container name
+	[ -z "$slot" ] || [ "${name##*-}" == "$slot" ] || continue
 	containers+=("$name")
 	statuses+=("$status")
 done < <(
@@ -22,82 +83,59 @@ done < <(
 		jq -r '.[] | (.devices.workspace.source // .expanded_devices.workspace.source // empty) as $ws | [$ws, .name, .status] | @tsv'
 )
 
+if [ -n "$stop" ]; then
+	if [ ${#containers[@]} -eq 0 ]; then
+		echo "No container for this workspace" >&2
+		exit 0
+	fi
+	exec coi "$stop" "${containers[@]}"
+fi
+
+# Both of these delete the container, so the launch below starts from scratch
+if $new && [ ${#containers[@]} -gt 0 ]; then
+	if $force; then
+		coi kill "${containers[@]}"
+	else
+		coi shutdown "${containers[@]}"
+	fi
+	containers=()
+	statuses=()
+fi
+
 if [ ${#containers[@]} -gt 0 ]; then
 	container="${containers[0]}"
 	status="${statuses[0]}"
 	if [ ${#containers[@]} -gt 1 ]; then
 		echo "Multiple containers for this workspace (${containers[*]}), using $container" >&2
 	fi
-	if [ $# -gt 0 ]; then
-		echo "Arguments only apply when a new container is started: $*" >&2
-	fi
+	[ -z "$profile" ] || echo "--profile only applies to a container started by this invocation" >&2
 
 	if [[ "${status,,}" != running ]]; then
 		coi container start "$container"
 	fi
-else
-	# `coi run` does the normal container setup without launching an agent. Keep
-	# that run alive for as long as its tmux session exists; otherwise an
-	# ephemeral container would be removed as soon as the detached session was
-	# created. The session name is the one `coi attach` and `coi tmux` expect.
-	coi run "$@" -- bash -c '
-		set -e
-		session="coi-$(hostname)"
-		tmux new-session -d -s "$session" -c "$PWD"
-		while tmux has-session -t "$session" 2>/dev/null; do
-			sleep 1
-		done
-	' &
-	runner_pid=$!
 
-	# Wait for coi to finish setup and for the command above to create tmux.
-	# If setup fails, preserve coi's exit status instead of spinning forever.
-	while kill -0 "$runner_pid" 2>/dev/null; do
-		container=""
-		while IFS=$'\t' read -r ws name; do
-			[ "$(realpath -m -- "$ws")" == "$workspace" ] || continue
-			if coi tmux list --format json 2>/dev/null |
-				jq -e --arg c "$name" 'any(.[]; .container == $c)' >/dev/null; then
-				container="$name"
-				break
-			fi
-		done < <(
-			coi container list --format json 2>/dev/null |
-				jq -r '.[] | (.devices.workspace.source // .expanded_devices.workspace.source // empty) as $ws | [$ws, .name] | @tsv'
-		)
-		[ -n "$container" ] && break
-		sleep 0.1
-	done
-
-	if [ -z "${container:-}" ]; then
-		if wait "$runner_pid"; then
-			exit 0
-		else
-			exit $?
-		fi
-	fi
-fi
-
-# `new-session -A` is an atomic attach-or-create. In particular, it creates a
-# fresh plain-shell session in a surviving container when regular `coi attach`
-# has nothing left to attach to.
-term="${TERM:-xterm-256color}"
-case "$term" in
+	term="${TERM:-xterm-256color}"
+	case "$term" in
 	xterm | xterm-color | xterm-256color) ;;
 	xterm-* | wezterm* | alacritty* | kitty* | foot* | rio* | contour* | st-* | tmux-256color* | screen-256color*)
 		term=xterm-256color
 		;;
-esac
+	esac
 
-coi container exec "$container" \
-	--user 1000 --group 1000 \
-	--env HOME=/home/code --env "TERM=$term" \
-	--tty -- tmux new-session -A -s "coi-$container"
-
-# When this invocation launched the container and the user exited the tmux
-# shell (rather than detaching), let `coi run` finish its normal cleanup before
-# returning to the outer shell.
-if [ -n "${runner_pid:-}" ] &&
-	! coi tmux list --format json | jq -e --arg c "$container" 'any(.[]; .container == $c)' >/dev/null; then
-	wait "$runner_pid"
+	# `new-session -A` is an atomic attach-or-create. In particular, it creates a
+	# fresh plain-shell session in a surviving container when regular `coi attach`
+	# has nothing left to attach to.
+	exec coi container exec "$container" \
+		--user 1000 --group 1000 \
+		--env HOME=/home/code --env "TERM=$term" \
+		--tty -- tmux new-session -A -s "coi-$container"
 fi
+
+# Only the `coi shell` path seeds the host's claude config and the sandbox
+# context into the container; the leaner `coi run` pipeline skips both. --debug
+# puts a plain bash in place of the agent, in the same tmux session that the
+# attach above expects, and leaves the container behind on exit.
+launch=(coi shell --debug)
+[ -z "$profile" ] || launch+=(--profile "$profile")
+[ -z "$slot" ] || launch+=(--slot "$slot")
+exec "${launch[@]}"
