@@ -124,10 +124,11 @@ if [ ${#containers[@]} -gt 0 ]; then
 
 	# `new-session -A` is an atomic attach-or-create. In particular, it creates a
 	# fresh plain-shell session in a surviving container when regular `coi attach`
-	# has nothing left to attach to.
+	# has nothing left to attach to. This direct `container exec` does not apply
+	# [defaults.environment], so give a newly created tmux server CODEX_HOME here.
 	exec coi container exec "$container" \
 		--user 1000 --group 1000 \
-		--env HOME=/home/code --env "TERM=$term" \
+		--env HOME=/home/code --env CODEX_HOME=/home/code/.codex-state --env "TERM=$term" \
 		--tty -- tmux new-session -A -s "coi-$container"
 fi
 

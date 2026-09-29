@@ -16,6 +16,8 @@ profile = "gui"
 BASH_ENV = "/etc/coi/set-environment.sh"
 # Use the auth-bridge as the default browser
 BROWSER = "/home/code/.dotfiles/coi/.coi/login-open"
+# Keep Codex's runtime state separate from the image's ~/.codex/packages install.
+CODEX_HOME = "/home/code/.codex-state"
 
 [defaults.env_commands]
 # GH_TOKEN = "gh auth token"
@@ -59,7 +61,7 @@ readonly = true
 
 [[mounts.default]]
 host = "~/.codex"
-container = "/home/code/.codex"
+container = "/home/code/.codex-state"
 
 # DESKTOP INTEROP
 
