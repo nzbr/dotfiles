@@ -28,10 +28,18 @@ host = "~/.config/graphite"
 container = "/home/code/.config/graphite"
 chmod = "0600"
 
+# NIX
+
 [[mounts.default]]
 host = "/nix/store"
 container = "/nix/store"
 readonly = true
+
+[[sockets]]
+host = "/nix/var/nix/daemon-socket/socket"
+container = "/nix/var/nix/daemon-socket/socket"
+
+# CLAUDE
 
 [[mounts.default]]
 host = "~/.claude/projects"
@@ -47,15 +55,18 @@ host = "~/.claude/output-styles"
 container = "/home/code/.claude-shared/output-styles"
 readonly = true
 
-[[sockets]]
-host = "/nix/var/nix/daemon-socket/socket"
-container = "/nix/var/nix/daemon-socket/socket"
+# CODEX
+
+[[mounts.default]]
+host = "~/.codex"
+container = "/home/code/.codex"
+
+# DESKTOP INTEROP
 
 [[sockets]]
 host = "/run/user/1000/agent-notify.sock"
 container = "/run/user/1000/agent-notify-relay.sock"
 
-# Socket for the login bridge
 [[sockets]]
 host = "/run/user/1000/agent-login.sock"
 container = "/run/user/1000/agent-login-relay.sock"
