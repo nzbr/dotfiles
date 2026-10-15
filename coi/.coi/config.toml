@@ -6,11 +6,11 @@ base = "ubuntu:24.04"
 script = "build.sh"
 compression = "none"
 
-[paths]
-preserve_workspace_path = true
-
 [defaults]
 profile = "gui"
+
+[paths]
+preserve_workspace_path = true
 
 [defaults.environment]
 BASH_ENV = "/etc/coi/set-environment.sh"
@@ -29,6 +29,9 @@ CODEX_HOME = "/home/code/.codex-state"
 host = "~/.config/graphite"
 container = "/home/code/.config/graphite"
 chmod = "0600"
+
+[tool]
+permission_mode = "interactive"
 
 # NIX
 
