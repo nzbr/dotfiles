@@ -18,6 +18,8 @@ BASH_ENV = "/etc/coi/set-environment.sh"
 BROWSER = "/home/code/.dotfiles/coi/.coi/login-open"
 # Keep Codex's runtime state separate from the image's ~/.codex/packages install.
 CODEX_HOME = "/home/code/.codex-state"
+# Load the host's plugins from the read-only mount below
+CLAUDE_CODE_PLUGIN_SEED_DIR = "/home/code/.claude-shared/plugins"
 
 [defaults.env_commands]
 # GH_TOKEN = "gh auth token"
@@ -58,6 +60,11 @@ readonly = true
 [[mounts.default]]
 host = "~/.claude/output-styles"
 container = "/home/code/.claude-shared/output-styles"
+readonly = true
+
+[[mounts.default]]
+host = "~/.claude/plugins"
+container = "/home/code/.claude-shared/plugins"
 readonly = true
 
 # CODEX
