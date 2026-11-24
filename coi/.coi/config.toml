@@ -34,7 +34,9 @@ chmod = "0600"
 
 [tool]
 permission_mode = "interactive"
-# See "Sandbox context" in build.sh
+# coi would put the sandbox context into ~/.claude/CLAUDE.md or ~/.codex/AGENTS.md,
+# which are the host's own here. It writes ~/SANDBOX_CONTEXT.md either way, and
+# the host's files point to that instead.
 auto_context = false
 
 # NIX

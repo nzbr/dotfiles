@@ -88,17 +88,6 @@ fi
 eval "$(direnv hook bash)" || true
 eval "$(starship init bash)" || true
 
-# Copy the sandbox context into the system-wide files below whenever coi has
-# rewritten it. Every shell checks, including the ones inheriting
-# COI_DEVSHELL_ACTIVE, because coi rewrites it on every session.
-ctx=/home/code/SANDBOX_CONTEXT.md
-if [ -f "$ctx" ] && [ "$ctx" -nt /etc/claude-code/CLAUDE.md ]; then
-  cat "$ctx" >/etc/claude-code/CLAUDE.md 2>/dev/null
-  python3 -c 'import json, sys; print("additional_developer_instructions = " + json.dumps(open(sys.argv[1]).read()))' \
-    "$ctx" >/etc/codex/requirements.toml 2>/dev/null
-fi
-unset ctx
-
 [ -n "${COI_DEVSHELL_ACTIVE:-}" ] && return 0
 export COI_DEVSHELL_ACTIVE=1
 eval "$(direnv export bash)" || true
@@ -177,18 +166,6 @@ if [ -f "$statusline/Cargo.toml" ]; then
 	apt-get purge -y cargo
 	apt-get autoremove -y --purge
 fi
-
-# Sandbox context
-# coi writes it into ~/.claude/CLAUDE.md or ~/.codex/AGENTS.md, but both
-# harnesses run on the host's config directories here, so neither would see it
-# (auto_context is off in config.toml for that reason). Both also read a
-# system-wide file on top of the user's own: claude its managed CLAUDE.md, codex
-# additional_developer_instructions from requirements.toml. The shell init hook
-# above fills them from ~/SANDBOX_CONTEXT.md, so they belong to code. Nothing
-# else goes into requirements.toml, because the hook overwrites it.
-mkdir -p /etc/claude-code /etc/codex
-install -o code -g code -m 644 /dev/null /etc/claude-code/CLAUDE.md
-install -o code -g code -m 644 /dev/null /etc/codex/requirements.toml
 
 apt-get clean
 rm -rf /var/lib/apt/lists/*
