@@ -34,6 +34,8 @@ chmod = "0600"
 
 [tool]
 permission_mode = "interactive"
+# See "Sandbox context" in build.sh
+auto_context = false
 
 # NIX
 
