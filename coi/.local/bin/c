@@ -130,7 +130,7 @@ if [ ${#containers[@]} -gt 0 ]; then
 	exec coi container exec "$container" \
 		--user 1000 --group 1000 \
 		--env HOME=/home/code --env CODEX_HOME=/home/code/.codex-state \
-		--env CLAUDE_SECURESTORAGE_CONFIG_DIR=/home/code/.claude-shared/auth \
+		--env CLAUDE_CONFIG_DIR=/home/nzbr/.claude \
 		--env "TERM=$term" \
 		--tty -- tmux new-session -A -s "coi-$container"
 fi

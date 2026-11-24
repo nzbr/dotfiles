@@ -167,13 +167,12 @@ if [ -f "$statusline/Cargo.toml" ]; then
 	apt-get autoremove -y --purge
 fi
 
-# Shared Claude Code History, Skills and Styles
-sudo -u code mkdir -p /home/code/.claude{,-shared/{projects,skills,output-styles}}
-rm -rf /home/code/.claude/{projects,skills,output-styles}
-ln -sfn /home/code/.claude-shared/projects /home/code/.claude/projects
-ln -sfn /home/code/.claude-shared/skills /home/code/.claude/skills
-ln -sfn /home/code/.claude-shared/output-styles /home/code/.claude/output-styles
-chown -h 1000:1000 /home/code/.claude/{projects,skills,output-styles}
+# Sandbox context
+# claude runs on the host's ~/.claude (CLAUDE_CONFIG_DIR in config.toml), so it
+# never reads the context coi writes into ~/.claude/CLAUDE.md in here. The
+# managed memory file is read on top of the user's own, so point that at it.
+mkdir -p /etc/claude-code
+ln -s /home/code/.claude/CLAUDE.md /etc/claude-code/CLAUDE.md
 
 apt-get clean
 rm -rf /var/lib/apt/lists/*

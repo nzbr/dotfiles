@@ -18,10 +18,8 @@ BASH_ENV = "/etc/coi/set-environment.sh"
 BROWSER = "/home/code/.dotfiles/coi/.coi/login-open"
 # Keep Codex's runtime state separate from the image's ~/.codex/packages install.
 CODEX_HOME = "/home/code/.codex-state"
-# Load the host's plugins from the read-only mount below
-CLAUDE_CODE_PLUGIN_SEED_DIR = "/home/code/.claude-shared/plugins"
-# One login for all containers, see the mount below
-CLAUDE_SECURESTORAGE_CONFIG_DIR = "/home/code/.claude-shared/auth"
+# Use the host's claude config, see the mount below
+CLAUDE_CONFIG_DIR = "/home/nzbr/.claude"
 
 [defaults.env_commands]
 # GH_TOKEN = "gh auth token"
@@ -50,34 +48,18 @@ container = "/nix/var/nix/daemon-socket/socket"
 
 # CLAUDE
 
+# The host's whole ~/.claude, read-write, so that settings, plugins, history and
+# the login are the same everywhere. A refresh token rotates on every refresh, so
+# a copy of the login per container would sign out all the others.
+#
+# It goes to the host's path rather than ~/.claude in here, because claude keeps
+# absolute paths in it (installed_plugins.json, for one). The host's
+# ~/.claude.json is a symlink into this directory, which is where claude looks
+# for it when CLAUDE_CONFIG_DIR is set -- see claude-config.nix in the
+# home-manager repo.
 [[mounts.default]]
-host = "~/.claude/projects"
-container = "/home/code/.claude-shared/projects"
-
-[[mounts.default]]
-host = "~/.claude/skills"
-container = "/home/code/.claude-shared/skills"
-readonly = true
-
-[[mounts.default]]
-host = "~/.claude/output-styles"
-container = "/home/code/.claude-shared/output-styles"
-readonly = true
-
-[[mounts.default]]
-host = "~/.claude/plugins"
-container = "/home/code/.claude-shared/plugins"
-readonly = true
-
-# coi copies the host's .credentials.json into every container, but each copy
-# rotates the refresh token on its first refresh, which signs out the host and
-# every other copy. Keeping the store in one shared directory means there is
-# only one token, and claude's write lock lives in the same directory, so
-# containers refreshing at the same time don't trip over each other either.
-# The host keeps its own login, since its claude still uses ~/.claude.
-[[mounts.default]]
-host = "~/.claude/coi-auth"
-container = "/home/code/.claude-shared/auth"
+host = "~/.claude"
+container = "/home/nzbr/.claude"
 
 # CODEX
 
