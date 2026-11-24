@@ -20,6 +20,8 @@ BROWSER = "/home/code/.dotfiles/coi/.coi/login-open"
 CODEX_HOME = "/home/code/.codex-state"
 # Load the host's plugins from the read-only mount below
 CLAUDE_CODE_PLUGIN_SEED_DIR = "/home/code/.claude-shared/plugins"
+# One login for all containers, see the mount below
+CLAUDE_SECURESTORAGE_CONFIG_DIR = "/home/code/.claude-shared/auth"
 
 [defaults.env_commands]
 # GH_TOKEN = "gh auth token"
@@ -66,6 +68,16 @@ readonly = true
 host = "~/.claude/plugins"
 container = "/home/code/.claude-shared/plugins"
 readonly = true
+
+# coi copies the host's .credentials.json into every container, but each copy
+# rotates the refresh token on its first refresh, which signs out the host and
+# every other copy. Keeping the store in one shared directory means there is
+# only one token, and claude's write lock lives in the same directory, so
+# containers refreshing at the same time don't trip over each other either.
+# The host keeps its own login, since its claude still uses ~/.claude.
+[[mounts.default]]
+host = "~/.claude/coi-auth"
+container = "/home/code/.claude-shared/auth"
 
 # CODEX
 
